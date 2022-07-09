@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "genai"
+version = "0.1.0"
+description = ""
+authors = ["Kyle Kelley <rgbkrk@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+openai = "^0.20.0"
+vdom = "^0.6"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
