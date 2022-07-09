@@ -34,6 +34,7 @@ ignore_tokens = [
     "get_ipython",
     "%load_ext",
     "import genai",
+    "%pip install",
 ]
 
 # Cells we want to keep for sure, in case In[] is too long.
