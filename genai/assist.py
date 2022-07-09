@@ -48,11 +48,18 @@ def ignored(inp):
     return False
 
 
-def truncate_prior_cells(cells: list[str], max_length: int = 500):
+def estimate_tokens(cells: list[str]):
+    """
+    Estimate the number of tokens in a cell.
+    """
+    return len("".join(cells).split())
+
+
+def truncate_prior_cells(cells: list[str], max_tokens: int = 500):
     """
     Truncate the priors to a reasonable length.
     """
-    if max_length < 0:
+    if max_tokens < 0:
         return []
 
     # Split into halves, with a preference for using #keep cells.
@@ -66,20 +73,20 @@ def truncate_prior_cells(cells: list[str], max_length: int = 500):
         if first_half.startswith(keep):
             keepers.append(keep)
 
-    if len("".join(keepers)) > max_length:
+    if estimate_tokens(keepers) > max_tokens:
         # TODO: Trim down the keeps as an option
         raise Exception("Too many cells are marked as #keep")
 
     # Check if keeps + second_half is the right size
-    if len("".join(keepers)) + len("".join(second_half)) < max_length:
+    if estimate_tokens(keepers + second_half) < max_tokens:
         return keepers + second_half
 
     # Split the second half now to see if we can fit more in.
     trimmed_second = truncate_prior_cells(
-        second_half, max_length - len("".join(keepers))
+        second_half, max_tokens - estimate_tokens(keepers)
     )
 
-    if len("".join(keepers)) + len("".join(trimmed_second)) < max_length:
+    if estimate_tokens(keepers + trimmed_second) < max_tokens:
         return keepers + trimmed_second
 
     return keepers
@@ -99,7 +106,7 @@ def prior_code(inputs: list[str], max_length: int = 500):
             continue
         lines.append(inp)
 
-    if len(lines) > max_length:
+    if estimate_tokens(lines) > max_length:
         lines = truncate_prior_cells(lines, max_length)
 
     return "".join([inp.replace("# generated with %%assist", "") for inp in lines])
@@ -163,18 +170,21 @@ def completion_made():
 def assist(line, cell):
     ip = get_ipython()
 
-    previous_inputs = prior_code(ip.history_manager.input_hist_raw)
-    cell_text = "".join(cell)
+    previous_inputs = prior_code(ip.history_manager.input_hist_raw).strip()
+    cell_text = "".join(cell).strip()
 
     prompt = f"""# Python\n{previous_inputs}\n{cell_text}""".strip()
 
     progress = display(starting_message(), display_id=True)
 
+    # make a rough estimate
+    prompt_token_count = len(prompt.split())
+
     completion = openai.Completion.create(
         model="text-davinci-002",
         prompt=prompt,
-        max_tokens=len(prompt) + 400,
-        temperature=0.6,
+        max_tokens=4096 - prompt_token_count,
+        temperature=0.5,
     )
     progress.update(completion_made())
 
