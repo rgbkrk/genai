@@ -1,12 +1,15 @@
 import os
 import random
+from genai.components import collapsible_log, completion_viewer, field, styled_code
 
 import openai
 
-from vdom import pre
+from vdom import pre, div, br, b as bold
+
 from IPython.core.magic import (
     register_cell_magic,
 )
+from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
 from IPython.display import display
 
@@ -35,6 +38,7 @@ ignore_tokens = [
     "%load_ext",
     "import genai",
     "%pip install",
+    "#%%assist",
 ]
 
 # Cells we want to keep for sure, in case In[] is too long.
@@ -69,9 +73,11 @@ def truncate_prior_cells(cells: list[str], max_tokens: int = 500):
     keepers = []
 
     # Only include the keeps from the first half
-    for keep in keep_tokens:
-        if first_half.startswith(keep):
-            keepers.append(keep)
+    for cell in first_half:
+        for keep in keep_tokens:
+            if keep in cell:
+                keepers.append(cell)
+                break
 
     if estimate_tokens(keepers) > max_tokens:
         # TODO: Trim down the keeps as an option
@@ -131,7 +137,7 @@ def starting_message():
             [
                 "Phoning a friend 📲",
                 "Reaching out to another data scientist 📊",
-                "Just a little bit of data engineering 🔧",
+                "Just a little bit of data engineering will fix this 🔧",
                 "Trying my best 💯",
                 "Generating some code cells 💻",
                 "Asking the internet 🌐",
@@ -166,29 +172,95 @@ def completion_made():
     )
 
 
+@magic_arguments()
+@argument("--fresh", action="store_true")
+@argument(
+    "-t",
+    "--temperature",
+    type=float,
+    default=0.5,
+    help="What sampling temperature to use. Higher values means the model will take more risks. Try 0.9 for more creative applications, and 0 (argmax sampling) for ones with a well-defined answer.",
+)
+@argument(
+    "--verbose",
+    action="store_true",
+    help="Show a full log in the cell output",
+)
+@argument(
+    "--in-place",
+    action="store_true",
+    help="Replace the current cell with the generated code",
+)
 @register_cell_magic
 def assist(line, cell):
-    ip = get_ipython()
-
-    previous_inputs = prior_code(ip.history_manager.input_hist_raw).strip()
-    cell_text = "".join(cell).strip()
-
-    prompt = f"""# Python\n{previous_inputs}\n{cell_text}""".strip()
-
     progress = display(starting_message(), display_id=True)
 
-    # make a rough estimate
-    prompt_token_count = len(prompt.split())
+    args = parse_argstring(assist, line)
+    ip = get_ipython()
+
+    # noop
+    def log(*args, **kwargs):
+        pass
+
+    if args.verbose:
+        handle = display(collapsible_log(), display_id=True)
+        logs = []
+
+        def log(element):
+            # Add VDOM element
+            logs.append(element)
+            handle.update(collapsible_log(logs))
+
+    previous_inputs = ""
+    if not args.fresh:
+        previous_inputs = prior_code(ip.history_manager.input_hist_raw).strip()
+
+        if len(previous_inputs) > 0:
+            log(div(bold("Previous inputs"), styled_code(previous_inputs)))
+        else:
+            log(
+                div(
+                    bold(
+                        "No previous inputs to send in the prompt",
+                        style={"color": "lightgrey"},
+                    )
+                )
+            )
+
+    cell_text = "".join(cell).strip()
+
+    prompt = (
+        f"""# Python code, matplotlib inline\n{previous_inputs}\n{cell_text}""".strip()
+    )
+
+    # make a rough estimate of the number of tokens being sent
+    prompt_token_count = len(prompt.split()) * 2
+    log(
+        div(
+            bold(f"Prompt being sent with an estimated {prompt_token_count} tokens:"),
+            styled_code(prompt),
+            style={"margin": "0.5em 0"},
+        ),
+    )
 
     completion = openai.Completion.create(
         model="text-davinci-002",
         prompt=prompt,
-        max_tokens=4096 - prompt_token_count,
-        temperature=0.5,
+        max_tokens=2048 - prompt_token_count,
+        temperature=args.temperature,
     )
     progress.update(completion_made())
 
+    log(completion_viewer(completion))
+
     choice = completion.choices[0]
+
+    new_cell = f"""# generated with %%assist\n{cell_text}{choice.text}"""
+
+    if args.in_place:
+        new_cell = f"""#%%assist {line}\n{cell_text}{choice.text}"""
+
     ip.set_next_input(
-        f"""# generated with %%assist\n{cell_text}{choice.text}""", replace=False
+        new_cell,
+        replace=args.in_place,
     )
