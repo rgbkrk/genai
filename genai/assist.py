@@ -4,7 +4,7 @@ from genai.components import collapsible_log, completion_viewer, field, styled_c
 
 import openai
 
-from vdom import pre, div, br, b as bold
+from vdom import pre, div, h3, b as bold
 
 from IPython.core.magic import (
     register_cell_magic,
@@ -204,13 +204,25 @@ def assist(line, cell):
         pass
 
     if args.verbose:
-        handle = display(collapsible_log(), display_id=True)
+        handle = display(
+            collapsible_log(),
+            display_id=True,
+        )
         logs = []
 
         def log(element):
             # Add VDOM element
             logs.append(element)
             handle.update(collapsible_log(logs))
+
+        log(
+            div(
+                h3("magic arguments"),
+                styled_code(line),
+                h3("submission"),
+                styled_code(cell),
+            )
+        )
 
     previous_inputs = ""
     if not args.fresh:
@@ -228,7 +240,7 @@ def assist(line, cell):
                 )
             )
 
-    cell_text = "".join(cell).strip()
+    cell_text = cell.strip()
 
     prompt = (
         f"""# Python code, matplotlib inline\n{previous_inputs}\n{cell_text}""".strip()
@@ -244,10 +256,35 @@ def assist(line, cell):
         ),
     )
 
+    #
+    # Reference on tokens: https://beta.openai.com/tokenizer
+    #
+    # The token count of our prompt plus `max_tokens` cannot exceed the model's
+    # context length, which is either 2048 or 4096.
+    #
+    # To assist us with this as a first pass, we'll calculate the recommended max
+    # based on how many lines their first cell had. If it goes beyond, we'll
+
+    # Scale the number of tokens according to the number of lines in the cell
+    max_tokens = 50 * len(cell.split("\n"))
+
+    # Remove the estimated prompt token count from the max
+    if max_tokens + prompt_token_count > 4000:
+        max_tokens = 4000 - prompt_token_count
+    if max_tokens < 0:
+        max_tokens = 10
+
+    log(
+        div(
+            bold(f"Max tokens got set to {max_tokens}"),
+            style={"margin": "0.5em 0"},
+        ),
+    )
+
     completion = openai.Completion.create(
         model="text-davinci-002",
         prompt=prompt,
-        max_tokens=1024 - prompt_token_count,
+        max_tokens=max_tokens,
         temperature=args.temperature,
     )
 

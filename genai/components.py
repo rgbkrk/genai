@@ -1,6 +1,6 @@
 import time
 
-from vdom import h3, div, pre, b as bold, i as italics, p, details, summary, br
+from vdom import h3, div, pre, b as bold, i as italics, p, details, summary, span, br
 
 
 def styled_code(code):
