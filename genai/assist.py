@@ -31,6 +31,7 @@ what gets sent in a prompt to openai.
 """
 # Cells we want to ignore
 ignore_tokens = [
+    "# genai:ignore",
     "#ignore",
     "# ignore",
     "%%assist",
@@ -246,9 +247,10 @@ def assist(line, cell):
     completion = openai.Completion.create(
         model="text-davinci-002",
         prompt=prompt,
-        max_tokens=2048 - prompt_token_count,
+        max_tokens=1024 - prompt_token_count,
         temperature=args.temperature,
     )
+
     progress.update(completion_made())
 
     log(completion_viewer(completion))
