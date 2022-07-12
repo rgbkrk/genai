@@ -272,7 +272,7 @@ def assist(line, cell):
     if max_tokens + prompt_token_count > 4000:
         max_tokens = 4000 - prompt_token_count
     if max_tokens < 0:
-        max_tokens = 10
+        max_tokens = 256
 
     log(
         div(
