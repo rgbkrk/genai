@@ -6,7 +6,7 @@ authors = ["Kyle Kelley <rgbkrk@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-openai = "^0.20.0"
+openai = "^0.27.0"
 vdom = "^0.6"
 
 [tool.poetry.dev-dependencies]
