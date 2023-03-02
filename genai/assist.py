@@ -16,14 +16,10 @@ from IPython.display import display
 """
 Initialize the openai API.
 """
-openai.organization = os.getenv("OPENAI_ORGANIZATION")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 if openai.api_key is None:
     raise Exception("Please set the OPENAI_API_KEY environment variable")
-
-if openai.organization is None:
-    raise Exception("Please set the OPENAI_ORGANIZATION environment variable")
 
 """
 If the users puts #ignore or #keep at the top of their cells, they can control
