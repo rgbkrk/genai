@@ -14,8 +14,9 @@ import openai
 # initialize the formatter for making the tracebacks into strings
 itb = AutoFormattedTB(mode="Plain", tb_offset=1)
 
-# faking filename injection
-notebook_name = "Exploring Python.ipynb"
+NOTEBOOK_CODING_ASSISTANT_TEMPLATE = """You are a notebook coding assistant, designed to help users diagnose error messages.
+Use markdown for formatting. Rely on GitHub flavored markdown for code blocks (specifying the language for syntax highlighting).
+Be concise. Write code examples."""
 
 # this function will be called on exceptions in any cell
 def custom_exc(shell, etype, evalue, tb, tb_offset=None):
@@ -23,8 +24,9 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
     code = shell.user_ns["In"][-1]
 
     # still show the error within the notebook, don't just swallow it
-    # shell.showtraceback((etype, evalue, []), tb_offset=tb_offset)
-    display(Markdown(f"**{etype.__name__}**: {evalue}"))
+    shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
+    # In case your notebook frontend doesn't collapse the traceback
+    # display(Markdown(f"**{etype.__name__}**: {evalue}"))
 
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -32,7 +34,7 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             # Establish the context in which GPT will respond with role: assistant
             {
                 "role": "system",
-                "content": f"""You are a notebook coding assistant, designed to help users diagnose error messages. The users notebook is called "{notebook_name}". Use markdown for formatting. Rely on GitHub flavored markdown for code blocks (specifying the language for syntax highlighting). Be concise. Write code examples.""",
+                "content": NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
             },
             # The user sent code
             {"role": "user", "content": code},
@@ -43,13 +45,21 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         ],
     )
 
-    # TODO: Make sure the message is from role: assistant
-    display(
-        Markdown(
-            f"""### 💡 Suggestion
-{completion["choices"][0]["message"]["content"]}
+    # display the suggestion
+    content = completion["choices"][0]["message"]["content"]
+    suggestion = f"""### 💡 Suggestion
+{content}
 """
-        )
+
+    # IPython.display.Markdown() doesn't return a plaintext version so we must return a raw display for use
+    # in `ipython`.
+
+    display(
+        {
+            "text/plain": suggestion,
+            "text/markdown": suggestion,
+        },
+        raw=True,
     )
 
 
