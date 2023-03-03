@@ -12,6 +12,7 @@ from vdom import pre, div, h3, b as bold
 
 from genai.components import collapsible_log, completion_viewer, field, styled_code
 
+
 def load_openai_key():
     """Load the openai key from the environment variable."""
     openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -292,3 +293,7 @@ def assist(line, cell):
         new_cell,
         replace=args.in_place,
     )
+
+
+# Configuration
+load_openai_key()
