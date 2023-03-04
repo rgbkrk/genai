@@ -1,5 +1,7 @@
 # GenAI: generative AI tooling for IPython
 
+Generate code cells and get recommendations after exceptions.
+
 ## Installation
 
 ```
@@ -13,6 +15,62 @@ Make sure to set the `OPENAI_API_KEY` environment variable first before using it
 ```
 %load_ext genai
 ```
+
+## Features
+
+- `%%assist` magic command to generate code from natural language
+- Custom exception suggestions
+
+### Custom Exception Suggestions
+
+```python
+In [1]: %load_ext genai
+
+In [2]: import pandas as pd
+
+In [3]: df = pd.DataFrame(dict(col1=['a', 'b', 'c']), index=['first', 'second', 'third'])
+
+In [4]: df.sort_values()
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+Cell In[4], line 1
+----> 1 df.sort_values()
+
+File ~/.pyenv/versions/3.9.9/lib/python3.9/site-packages/pandas/util/_decorators.py:331, in deprecate_nonkeyword_arguments.<locals>.decorate.<locals>.wrapper(*args, **kwargs)
+    325 if len(args) > num_allow_args:
+    326     warnings.warn(
+    327         msg.format(arguments=_format_argument_list(allow_args)),
+    328         FutureWarning,
+    329         stacklevel=find_stack_level(),
+    330     )
+--> 331 return func(*args, **kwargs)
+
+TypeError: sort_values() missing 1 required positional argument: 'by'
+```
+
+#### 💡 Suggestion
+
+The error message is indicating that the `sort_values()` method of a pandas dataframe is missing a required positional argument.
+
+The `sort_values()` method requires you to pass a column name or list of column names as the `by` argument. This is used to determine how the sorting will be performed.
+
+Here's an example:
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({
+    'Name': ['Alice', 'Bob', 'Carol', 'David', 'Eva'],
+    'Age': [32, 24, 28, 35, 29],
+    'Salary': [60000, 40000, 35000, 80000, 45000]
+})
+
+# sort by Age column:
+df_sorted = df.sort_values(by='Age')
+print(df_sorted)
+```
+
+In this example, the `by` argument is set to `'Age'`, which sorts the dataframe by age in ascending order. Note that you can also pass a list of column names if you want to sort by multiple columns.
 
 ## Example
 
