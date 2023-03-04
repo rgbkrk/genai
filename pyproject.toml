@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "genai"
-version = "0.8.0"
+version = "0.9.0"
 description = ""
 authors = ["Kyle Kelley <rgbkrk@gmail.com>"]
 
