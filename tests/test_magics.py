@@ -1,9 +1,7 @@
-import pytest
-from IPython.testing.globalipapp import start_ipython
-
 from unittest import mock
 
-import openai
+import pytest
+from IPython.testing.globalipapp import start_ipython
 
 from genai import generate
 
