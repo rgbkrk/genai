@@ -6,13 +6,14 @@ notebook as usual.
 
 
 from IPython.core.ultratb import AutoFormattedTB
-from IPython.core.display import Markdown, display
+from IPython.core.display import display, ProgressBar
 from IPython import get_ipython
+
+from vdom import h3
 
 import openai
 
-# initialize the formatter for making the tracebacks into strings
-itb = AutoFormattedTB(mode="Plain", tb_offset=1)
+from traceback import TracebackException
 
 NOTEBOOK_CODING_ASSISTANT_TEMPLATE = """You are a notebook coding assistant, designed to help users diagnose error messages.
 Use markdown for formatting. Rely on GitHub flavored markdown for code blocks (specifying the language for syntax highlighting).
@@ -25,31 +26,51 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
 
     # still show the error within the notebook, don't just swallow it
     shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
-    # In case your notebook frontend doesn't collapse the traceback
-    # display(Markdown(f"**{etype.__name__}**: {evalue}"))
+
+    heading = display(h3("Let's see how we can fix this... 🔧"), display_id=True)
+    pb = ProgressBar(100)
+    pb.html_width = "100%"
+    pb.display()
+
+    pb.progress = 30
+    pb.update()
+
+    # Highly colorized tracebacks do not help GPT as much as a clean plaintext
+    # traceback.
+    formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)
+    plaintext_traceback = "\n".join(formatted)
+
+    if len(plaintext_traceback) > 1024:
+        plaintext_traceback = plaintext_traceback[:1024] + "\n..."
+
+    messages = [
+        # Establish the context in which GPT will respond with role: assistant
+        {
+            "role": "system",
+            "content": NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
+        },
+        # The user sent code
+        {"role": "user", "content": code},
+        # The system literally wrote back with the error
+        {"role": "system", "content": f"{etype}: {evalue}\n{plaintext_traceback}"},
+        # expectation is that ChatGPT responds with:
+        # { "role": "assistant", "content": ... }
+    ]
 
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=[
-            # Establish the context in which GPT will respond with role: assistant
-            {
-                "role": "system",
-                "content": NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
-            },
-            # The user sent code
-            {"role": "user", "content": code},
-            # The system literally wrote back with the error
-            {"role": "system", "content": f"{etype}: {evalue}"},
-            # expectation is that ChatGPT responds with:
-            # { "role": "assistant", "content": ... }
-        ],
+        messages=messages,
     )
+    pb.progress = 70
+    pb.update()
 
     # display the suggestion
     content = completion["choices"][0]["message"]["content"]
-    suggestion = f"""### 💡 Suggestion
-{content}
-"""
+    suggestion = content
+
+    pb.progress = 100
+    pb.update()
+    heading.update(h3("Here's a way to fix this 🛠"))
 
     # IPython.display.Markdown() doesn't return a plaintext version so we must return a raw display for use
     # in `ipython`.
