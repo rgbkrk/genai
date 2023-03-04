@@ -1,5 +1,12 @@
+# from IPython.testing.globalipapp import get_ipython
+
+# ip = get_ipython()
+
 from genai import __version__
 
+import unittest
 
-def test_version():
-    assert __version__ == "0.8.0"
+
+class TestSuggestions(unittest.TestCase):
+    def test_version(self):
+        assert __version__ == "0.8.0"

@@ -217,7 +217,7 @@ def assist(line, cell):
 
     previous_inputs = ""
     if not args.fresh:
-        previous_inputs = prior_code(ip.history_manager.input_hist_raw).strip()
+        previous_inputs = use_prior_code(ip.history_manager.input_hist_raw).strip()
 
         if len(previous_inputs) > 0:
             log(div(bold("Previous inputs"), styled_code(previous_inputs)))
