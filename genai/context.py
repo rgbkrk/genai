@@ -39,6 +39,11 @@ def get_historical_context(ipython, num_messages=5):
     # This has to keep the input index as the key for the output
     inputs = {}
     for i, input in enumerate(raw_inputs):
+        if input is None:
+            continue
+        if input.strip() == "":
+            continue
+
         if not any(input.startswith(token) for token in ignore_tokens):
             inputs[i] = input
 

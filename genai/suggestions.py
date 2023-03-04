@@ -6,7 +6,8 @@ notebook as usual.
 
 
 from IPython.core.ultratb import AutoFormattedTB
-from IPython.core.display import display, ProgressBar
+from IPython.core.display import ProgressBar
+from IPython import display
 from IPython import get_ipython
 
 from vdom import h3
