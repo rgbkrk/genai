@@ -15,6 +15,6 @@ __version__ = "0.8.0"
 
 def load_ipython_extension(ipython):
     from .suggestions import register
-    from .assist import assist
+    from .magics import assist
 
     register()
