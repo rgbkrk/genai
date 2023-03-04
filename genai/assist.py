@@ -1,31 +1,32 @@
+"""Magic to generate code cells for notebooks using OpenAI's API."""
 import os
 import random
-from genai.components import collapsible_log, completion_viewer, field, styled_code
 
 import openai
-
-from vdom import pre, div, h3, b as bold
-
 from IPython.core.magic import (
     register_cell_magic,
 )
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
-
 from IPython.display import display
+from vdom import pre, div, h3, b as bold
 
-"""
-Initialize the openai API.
-"""
-openai.api_key = os.getenv("OPENAI_API_KEY")
+from genai.components import collapsible_log, completion_viewer, field, styled_code
 
-if openai.api_key is None:
-    raise Exception("Please set the OPENAI_API_KEY environment variable")
+
+def load_openai_key():
+    """Load the openai key from the environment variable."""
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+
+def check_openai_key():
+    """Check if the openai key is set."""
+    if openai.api_key is None:
+        raise Exception("Please set the OPENAI_API_KEY environment variable")
 
 """
 If the users puts #ignore or #keep at the top of their cells, they can control
 what gets sent in a prompt to openai.
 """
-# Cells we want to ignore
+# tokens to idenfify which cells to ignore
 ignore_tokens = [
     "# genai:ignore",
     "#ignore",
@@ -38,34 +39,30 @@ ignore_tokens = [
     "#%%assist",
 ]
 
-# Cells we want to keep for sure, in case In[] is too long.
+# tokens to identify which cells to keep. If `In[]` is too long, keep cells will not be ignored.
 keep_tokens = ["#keep", "# keep"]
 
 
-def ignored(inp):
+def is_ignored(content: str):
     for ignore in ignore_tokens:
-        if inp.startswith(ignore):
+        if content.startswith(ignore):
             return True
     return False
 
 
 def estimate_tokens(cells: list[str]):
-    """
-    Estimate the number of tokens in a cell.
-    """
+    """Estimate the number of tokens in a cell."""
     return len("".join(cells).split())
 
 
 def truncate_prior_cells(cells: list[str], max_tokens: int = 500):
-    """
-    Truncate the priors to a reasonable length.
-    """
+    """Truncate the prior cells to a reasonable length."""
     if max_tokens < 0:
         return []
 
-    # Split into halves, with a preference for using #keep cells.
-    first_half = cells[: len(cells) // 2]
-    second_half = cells[len(cells) // 2 :]
+    # Slice into halves, with a preference for using `#keep` cells.
+    first_half = cells[ : len(cells) // 2 ]
+    second_half = cells[ len(cells) // 2 : ]
 
     keepers = []
 
@@ -95,19 +92,16 @@ def truncate_prior_cells(cells: list[str], max_tokens: int = 500):
     return keepers
 
 
-def prior_code(inputs: list[str], max_length: int = 500):
-    """
-    Grab all of the inputs, up to a certain length, and return them as a string.
-    """
-
+def use_prior_code(inputs: list[str], max_length: int = 500):
+    """Grab all of the inputs, up to a max length. Return prior code as a string."""
     # Add lines in reverse order
     lines = []
 
     # Assume, naively at first that we can keep it all.
-    for inp in inputs:
-        if ignored(inp):
+    for input in inputs:
+        if is_ignored(input):
             continue
-        lines.append(inp)
+        lines.append(input)
 
     if estimate_tokens(lines) > max_length:
         lines = truncate_prior_cells(lines, max_length)
@@ -115,7 +109,7 @@ def prior_code(inputs: list[str], max_length: int = 500):
     return "".join([inp.replace("# generated with %%assist", "") for inp in lines])
 
 
-"""
+help_message = """
 Messages were generated using the text-davinci-002 model using this prompt:
 
 Write some catch phrases for an AI that generates code cells for Jupyter
@@ -299,3 +293,7 @@ def assist(line, cell):
         new_cell,
         replace=args.in_place,
     )
+
+
+# Configuration
+load_openai_key()
