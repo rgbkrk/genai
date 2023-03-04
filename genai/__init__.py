@@ -1,4 +1,4 @@
-"""Genai IPython magic extensions.
+"""Genai: generative AI tooling for IPython and Jupyter notebooks
 
 ## Magic methods
 
@@ -13,7 +13,8 @@
 __version__ = "0.8.0"
 
 from .assist import assist
+from .suggestions import register
 
 
 def load_ipython_extension(ipython):
-    pass
+    register()

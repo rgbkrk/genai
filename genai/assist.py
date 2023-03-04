@@ -3,12 +3,11 @@ import os
 import random
 
 import openai
-from IPython.core.magic import (
-    register_cell_magic,
-)
+from IPython.core.magic import register_cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 from IPython.display import display
-from vdom import pre, div, h3, b as bold
+from vdom import b as bold
+from vdom import div, h3, pre
 
 from genai.components import collapsible_log, completion_viewer, field, styled_code
 
@@ -17,10 +16,12 @@ def load_openai_key():
     """Load the openai key from the environment variable."""
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
+
 def check_openai_key():
     """Check if the openai key is set."""
     if openai.api_key is None:
         raise Exception("Please set the OPENAI_API_KEY environment variable")
+
 
 """
 If the users puts #ignore or #keep at the top of their cells, they can control
@@ -61,8 +62,8 @@ def truncate_prior_cells(cells: list[str], max_tokens: int = 500):
         return []
 
     # Slice into halves, with a preference for using `#keep` cells.
-    first_half = cells[ : len(cells) // 2 ]
-    second_half = cells[ len(cells) // 2 : ]
+    first_half = cells[: len(cells) // 2]
+    second_half = cells[len(cells) // 2 :]
 
     keepers = []
 
