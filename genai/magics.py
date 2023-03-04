@@ -67,7 +67,7 @@ def assist(line, cell):
 
     progress.update(completion_made())
 
-    new_cell = f"""# generated with %%assist\n{cell_text}\n{generated_text}"""
+    new_cell = f"""{cell_text}\n{generated_text}"""
 
     if args.in_place:
         new_cell = f"""#%%assist {line}\n{cell_text}\n{generated_text}"""
