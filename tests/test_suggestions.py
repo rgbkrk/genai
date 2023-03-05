@@ -112,7 +112,7 @@ def test_custom_exc(create, publish_display_data, display, ip):
 )
 def test_custom_exc_long_traceback(create, publish_display_data, display, ip):
     try:
-        raise Exception("a" * 1000)
+        raise Exception("a" * 2000)
     except Exception:
         (etype, evalue, tb) = sys.exc_info()
 
@@ -188,7 +188,7 @@ def test_custom_exc_long_traceback(create, publish_display_data, display, ip):
     },
     autospec=True,
 )
-def test_custom_exc_long_traceback(create, print, ip):
+def test_custom_exc_error_inside(create, print, ip):
     ip.showtraceback = mock.MagicMock()
 
     try:

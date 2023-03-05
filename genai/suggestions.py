@@ -46,6 +46,7 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
 
         # Cap our error report at ~1024 characters
         error_report = f"{etype.__name__}: {evalue}\n{plaintext_traceback}"
+
         if len(error_report) > 1024:
             error_report = error_report[:1024] + "\n..."
 
