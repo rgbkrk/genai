@@ -11,22 +11,20 @@ on: # yamllint disable-line rule:truthy
 jobs:
   test:
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        python_version: ["3.9", "3.10"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
       - name: Install dependencies
         run: |
           pip install poetry
+          pip install ipython
           poetry install --no-interaction
       - name: Run tests
-        run: poetry run python -m unittest
+        run: poetry run pytest
   format-check:
     runs-on: ubuntu-20.04
     steps:
@@ -35,4 +33,4 @@ jobs:
       - name: Install Black
         run: pip install black
       - name: Check black
-        run: black --check poked tests
+        run: black --check genai tests

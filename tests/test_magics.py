@@ -21,7 +21,6 @@ from genai import generate
     autospec=True,
 )
 def test_assist_magic(create, ip):
-
     ip.run_cell_magic(magic_name="assist", line="", cell="create a scatterplot from df")
 
     # Check that create was called with the correct arguments
