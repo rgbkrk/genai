@@ -5,12 +5,10 @@ notebook as usual.
 """
 
 
-from IPython.core.ultratb import AutoFormattedTB
-from IPython.core.display import ProgressBar
-from IPython import display
+from IPython.display import ProgressBar, HTML, display
 from IPython import get_ipython
 
-from vdom import h3
+from genai.components import h3
 
 import openai
 
@@ -20,6 +18,7 @@ NOTEBOOK_CODING_ASSISTANT_TEMPLATE = """You are a notebook coding assistant, des
 Use markdown for formatting. Rely on GitHub flavored markdown for code blocks (specifying the language for syntax highlighting).
 Be concise. Write code examples."""
 
+
 # this function will be called on exceptions in any cell
 def custom_exc(shell, etype, evalue, tb, tb_offset=None):
     # Get the current code
@@ -28,7 +27,7 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
     # still show the error within the notebook, don't just swallow it
     shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
 
-    heading = display(h3("Let's see how we can fix this... 🔧"), display_id=True)
+    heading = display(HTML(h3("Let's see how we can fix this... 🔧")), display_id=True)
     pb = ProgressBar(100)
     pb.html_width = "100%"
     pb.display()
@@ -71,7 +70,7 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
 
     pb.progress = 100
     pb.update()
-    heading.update(h3("Here's a way to fix this 🛠"))
+    heading.update(HTML(h3("Here's a way to fix this 🛠</h3>")))
 
     # IPython.display.Markdown() doesn't return a plaintext version so we must return a raw display for use
     # in `ipython`.

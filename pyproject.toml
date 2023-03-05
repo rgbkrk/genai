@@ -1,16 +1,18 @@
 [tool.poetry]
 name = "genai"
 version = "0.9.1"
-description = ""
+description = "Generative AI for IPython (enhance your code cells)"
 authors = ["Kyle Kelley <rgbkrk@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
 openai = "^0.27.0"
 vdom = "^0.6"
+ipython = "^8.10.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = "^7.2.2"
+black = "^23.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

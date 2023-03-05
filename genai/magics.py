@@ -3,18 +3,11 @@
 from IPython import get_ipython
 from IPython.core.magic import register_cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
-from IPython.display import display
+from IPython.display import display, HTML
 
-from genai.components import (
-    collapsible_log,
-    completion_made,
-    starting_message,
-    styled_code,
-)
+from genai.components import completion_made, starting_message
 from genai.context import get_historical_context
 from genai.generate import generate_next_cell
-
-from vdom import div, h3
 
 
 @magic_arguments()
@@ -31,7 +24,7 @@ from vdom import div, h3
 )
 @register_cell_magic
 def assist(line, cell):
-    progress = display(starting_message(), display_id=True)
+    progress = display(HTML(starting_message()), display_id=True)
 
     args = parse_argstring(assist, line)
 
@@ -43,29 +36,14 @@ def assist(line, cell):
         context = get_historical_context(ip)
 
     if args.verbose:
-        handle = display(
-            collapsible_log(),
-            display_id=True,
-        )
-        logs = []
-
-        def log(element):
-            # Add VDOM element
-            logs.append(element)
-            handle.update(collapsible_log(logs))
-
-        log(
-            div(
-                h3("magic arguments"),
-                styled_code(line),
-                h3("submission"),
-                styled_code(cell),
-            )
+        display(
+            f"""magic arguments: {line}
+submission: {cell}"""
         )
 
     generated_text = generate_next_cell(context, cell_text)
 
-    progress.update(completion_made())
+    progress.update(HTML(completion_made()))
 
     new_cell = f"""{cell_text}\n{generated_text}"""
 

@@ -6,20 +6,6 @@ from IPython.testing.globalipapp import start_ipython
 from genai import generate
 
 
-@pytest.fixture(scope="session")
-def session_ip():
-    yield start_ipython()
-
-
-@pytest.fixture(scope="function")
-def ip(session_ip):
-    session_ip.run_line_magic(magic_name="load_ext", line="genai")
-    yield session_ip
-    # Include unload_ext once we define how to unload our extension
-    # session_ip.run_line_magic(magic_name="unload_ext", line="genai")
-    session_ip.run_line_magic(magic_name="reset", line="-f")
-
-
 @mock.patch(
     "openai.ChatCompletion.create",
     return_value={

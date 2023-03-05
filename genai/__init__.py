@@ -18,3 +18,8 @@ def load_ipython_extension(ipython):
     from .magics import assist
 
     register()
+
+
+def unload_ipython_extension(ipython):
+    # Unload the custom exception handler
+    ipython.set_custom_exc((Exception,), None)
