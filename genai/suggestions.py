@@ -44,8 +44,10 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)
         plaintext_traceback = "\n".join(formatted)
 
-        if len(plaintext_traceback) > 1024:
-            plaintext_traceback = plaintext_traceback[:1024] + "\n..."
+        # Cap our error report at ~1024 characters
+        error_report = f"{etype.__name__}: {evalue}\n{plaintext_traceback}"
+        if len(error_report) > 1024:
+            error_report = error_report[:1024] + "\n..."
 
         messages = [
             # Establish the context in which GPT will respond with role: assistant
@@ -58,7 +60,7 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             # The system literally wrote back with the error
             {
                 "role": "system",
-                "content": f"{etype.__name__}: {evalue}\n{plaintext_traceback}",
+                "content": error_report,
             },
             # expectation is that ChatGPT responds with:
             # { "role": "assistant", "content": ... }
