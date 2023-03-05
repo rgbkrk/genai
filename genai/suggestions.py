@@ -21,67 +21,75 @@ Be concise. Write code examples."""
 
 # this function will be called on exceptions in any cell
 def custom_exc(shell, etype, evalue, tb, tb_offset=None):
-    # Get the current code
-    code = shell.user_ns["In"][-1]
-
     # still show the error within the notebook, don't just swallow it
     shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
 
-    heading = display(HTML(h3("Let's see how we can fix this... 🔧")), display_id=True)
-    pb = ProgressBar(100)
-    pb.html_width = "100%"
-    pb.display()
+    try:
+        # Get the current code
+        code = shell.user_ns["In"][-1]
 
-    pb.progress = 30
-    pb.update()
+        heading = display(
+            HTML(h3("Let's see how we can fix this... 🔧")), display_id=True
+        )
+        pb = ProgressBar(100)
+        pb.html_width = "100%"
+        pb.display()
 
-    # Highly colorized tracebacks do not help GPT as much as a clean plaintext
-    # traceback.
-    formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)
-    plaintext_traceback = "\n".join(formatted)
+        pb.progress = 30
+        pb.update()
 
-    if len(plaintext_traceback) > 1024:
-        plaintext_traceback = plaintext_traceback[:1024] + "\n..."
+        # Highly colorized tracebacks do not help GPT as much as a clean plaintext
+        # traceback.
+        formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)
+        plaintext_traceback = "\n".join(formatted)
 
-    messages = [
-        # Establish the context in which GPT will respond with role: assistant
-        {
-            "role": "system",
-            "content": NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
-        },
-        # The user sent code
-        {"role": "user", "content": code},
-        # The system literally wrote back with the error
-        {"role": "system", "content": f"{etype}: {evalue}\n{plaintext_traceback}"},
-        # expectation is that ChatGPT responds with:
-        # { "role": "assistant", "content": ... }
-    ]
+        if len(plaintext_traceback) > 1024:
+            plaintext_traceback = plaintext_traceback[:1024] + "\n..."
 
-    completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-    )
-    pb.progress = 70
-    pb.update()
+        messages = [
+            # Establish the context in which GPT will respond with role: assistant
+            {
+                "role": "system",
+                "content": NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
+            },
+            # The user sent code
+            {"role": "user", "content": code},
+            # The system literally wrote back with the error
+            {
+                "role": "system",
+                "content": f"{etype.__name__}: {evalue}\n{plaintext_traceback}",
+            },
+            # expectation is that ChatGPT responds with:
+            # { "role": "assistant", "content": ... }
+        ]
 
-    # display the suggestion
-    content = completion["choices"][0]["message"]["content"]
-    suggestion = content
+        completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+        )
+        pb.progress = 70
+        pb.update()
 
-    pb.progress = 100
-    pb.update()
-    heading.update(HTML(h3("Here's a way to fix this 🛠</h3>")))
+        # display the suggestion
+        content = completion["choices"][0]["message"]["content"]
+        suggestion = content
 
-    # IPython.display.Markdown() doesn't return a plaintext version so we must return a raw display for use
-    # in `ipython`.
+        pb.progress = 100
+        pb.update()
+        heading.update(HTML(h3("Here's a way to fix this 🛠")))
 
-    display(
-        {
-            "text/plain": suggestion,
-            "text/markdown": suggestion,
-        },
-        raw=True,
-    )
+        # IPython.display.Markdown() doesn't return a plaintext version so we must return a raw display for use
+        # in `ipython`.
+
+        display(
+            {
+                "text/plain": suggestion,
+                "text/markdown": suggestion,
+            },
+            raw=True,
+        )
+    except Exception as e:
+        print("Error while trying to provide a suggestion: ", e)
 
 
 def register(ipython=None):

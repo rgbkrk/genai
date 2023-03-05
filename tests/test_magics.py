@@ -1,8 +1,5 @@
 from unittest import mock
 
-import pytest
-from IPython.testing.globalipapp import start_ipython
-
 from genai import generate
 
 
