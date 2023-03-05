@@ -14,10 +14,12 @@ __version__ = "0.10.0"
 
 
 def load_ipython_extension(ipython):
-    from .suggestions import register
-    from .magics import assist
+    import genai.suggestions
+    from genai.magics import assist
 
-    register()
+    ipython.register_magic_function(assist, "cell")
+
+    genai.suggestions.register()
 
 
 def unload_ipython_extension(ipython):

@@ -1,7 +1,7 @@
 """Magic to generate code cells for notebooks using OpenAI's API."""
 
 from IPython import get_ipython
-from IPython.core.magic import register_cell_magic
+from IPython.core.magic import cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 from IPython.display import display, HTML
 
@@ -22,7 +22,7 @@ from genai.generate import generate_next_cell
     action="store_true",
     help="Replace the current cell with the generated code",
 )
-@register_cell_magic
+@cell_magic
 def assist(line, cell):
     """Generate code cells for notebooks using OpenAI's API.
 
