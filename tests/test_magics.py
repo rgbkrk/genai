@@ -34,3 +34,47 @@ def test_assist_magic(create, ip):
             },
         ],
     )
+
+
+@mock.patch(
+    "openai.ChatCompletion.create",
+    return_value={
+        "choices": [
+            {
+                "message": {
+                    "role": "assistant",
+                    "content": "just like code better",
+                },
+            },
+        ],
+    },
+    autospec=True,
+)
+def test_assist_magic_with_args(create, ip):
+    ip.set_next_input = mock.MagicMock()
+
+    ip.run_cell_magic(
+        magic_name="assist",
+        line="--in-place --verbose",
+        cell="create a scatterplot from df",
+    )
+
+    # Check that create was called with the correct arguments
+    create.assert_called_once_with(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": generate.NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
+            },
+            {
+                "role": "user",
+                "content": "create a scatterplot from df",
+            },
+        ],
+    )
+
+    ip.set_next_input.assert_called_once_with(
+        "#%%assist --in-place --verbose\ncreate a scatterplot from df\njust like code better",
+        replace=True,
+    )
