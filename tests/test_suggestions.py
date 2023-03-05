@@ -18,6 +18,9 @@ def test_register():
     autospec=True,
 )
 @mock.patch(
+    "IPython.core.display_functions.publish_display_data",
+)
+@mock.patch(
     "openai.ChatCompletion.create",
     return_value={
         "choices": [
@@ -31,7 +34,7 @@ def test_register():
     },
     autospec=True,
 )
-def test_custom_exc(create, display, ip):
+def test_custom_exc(create, publish_display_data, display, ip):
     try:
         raise Exception("this is just a test")
     except Exception:
@@ -65,8 +68,22 @@ def test_custom_exc(create, display, ip):
     assert kwargs["messages"][2]["content"].startswith("Exception: this is just a test")
 
     # display will be called *lots* of times
+    # For some reason this is only those that are using display IDs
     display.assert_called()
+    # We also have to look at the publish_display_data calls
+    publish_display_data.assert_called()
 
-    # The last call to display should be the heading
+    # The last call to regular display is the heading
     heading = display.call_args_list[-1][0][0]
     assert heading.data == "<h3>Here's a way to fix this 🛠</h3>"
+
+    last_call = publish_display_data.call_args_list[-1]
+
+    # get kwargs from the last call
+    kwargs = last_call[1]
+
+    # Now to check that we're publishing the correct data from the API
+    assert kwargs["data"] == {
+        "text/markdown": "Here's a suggestion",
+        "text/plain": "Here's a suggestion",
+    }

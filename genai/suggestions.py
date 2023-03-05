@@ -5,7 +5,8 @@ notebook as usual.
 """
 
 
-from IPython.display import ProgressBar, HTML, display
+from IPython.display import ProgressBar, HTML
+from IPython.core.display_functions import display
 from IPython import get_ipython
 
 from genai.components import h3
@@ -88,6 +89,7 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             },
             raw=True,
         )
+
     except Exception as e:
         print("Error while trying to provide a suggestion: ", e)
 
