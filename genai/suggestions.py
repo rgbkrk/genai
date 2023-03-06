@@ -5,11 +5,9 @@ notebook as usual.
 """
 
 
-from IPython.display import ProgressBar, HTML
+from IPython.display import Pretty
 from IPython.core.display_functions import display
 from IPython import get_ipython
-
-from genai.components import h3
 
 import openai
 
@@ -30,14 +28,8 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         code = shell.user_ns["In"][-1]
 
         heading = display(
-            HTML(h3("Let's see how we can fix this... 🔧")), display_id=True
+            Pretty(("Let's see how we can fix this... 🔧")), display_id=True
         )
-        pb = ProgressBar(100)
-        pb.html_width = "100%"
-        pb.display()
-
-        pb.progress = 30
-        pb.update()
 
         # Highly colorized tracebacks do not help GPT as much as a clean plaintext
         # traceback.
@@ -71,16 +63,18 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             model="gpt-3.5-turbo",
             messages=messages,
         )
-        pb.progress = 70
-        pb.update()
 
         # display the suggestion
         content = completion["choices"][0]["message"]["content"]
         suggestion = content
 
-        pb.progress = 100
-        pb.update()
-        heading.update(HTML(h3("Here's a way to fix this 🛠")))
+        heading.update(
+            {
+                "text/markdown": f"## 💡 Suggestion",
+                "text/plain": "",
+            },
+            raw=True,
+        )
 
         # IPython.display.Markdown() doesn't return a plaintext version so we must return a raw display for use
         # in `ipython`.
@@ -88,7 +82,7 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         display(
             {
                 "text/plain": suggestion,
-                "text/markdown": suggestion,
+                "text/markdown": f"{suggestion}",
             },
             raw=True,
         )

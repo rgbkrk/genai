@@ -3,8 +3,6 @@ from unittest import mock
 
 from genai import suggestions
 
-from IPython.display import HTML
-
 
 def test_register():
     fake_ip = mock.MagicMock()
@@ -75,7 +73,7 @@ def test_custom_exc(create, publish_display_data, display, ip):
 
     # The last call to regular display is the heading
     heading = display.call_args_list[-1][0][0]
-    assert heading.data == "<h3>Here's a way to fix this 🛠</h3>"
+    assert heading == {"text/markdown": "## 💡 Suggestion", "text/plain": ""}
 
     last_call = publish_display_data.call_args_list[-1]
 
@@ -159,7 +157,7 @@ def test_custom_exc_long_traceback(create, publish_display_data, display, ip):
 
     # The last call to regular display is the heading
     heading = display.call_args_list[-1][0][0]
-    assert heading.data == "<h3>Here's a way to fix this 🛠</h3>"
+    assert heading == {"text/markdown": "## 💡 Suggestion", "text/plain": ""}
 
     last_call = publish_display_data.call_args_list[-1]
 
