@@ -26,7 +26,7 @@ def test_assist_magic(create, ip):
         messages=[
             {
                 "role": "system",
-                "content": generate.NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
+                "content": generate.NOTEBOOK_CREATE_NEXT_CELL_PROCLAMATION,
             },
             {
                 "role": "user",
@@ -65,7 +65,7 @@ def test_assist_magic_with_args(create, ip):
         messages=[
             {
                 "role": "system",
-                "content": generate.NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
+                "content": generate.NOTEBOOK_CREATE_NEXT_CELL_PROCLAMATION,
             },
             {
                 "role": "user",
@@ -75,7 +75,7 @@ def test_assist_magic_with_args(create, ip):
     )
 
     ip.set_next_input.assert_called_once_with(
-        "#%%assist --in-place --verbose\ncreate a scatterplot from df\njust like code better",
+        "#%%assist --in-place --verbose\n# create a scatterplot from df\njust like code better",
         replace=True,
     )
 
@@ -108,7 +108,7 @@ def test_assist_magic_with_fresh_arg(create, ip):
         messages=[
             {
                 "role": "system",
-                "content": generate.NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
+                "content": generate.NOTEBOOK_CREATE_NEXT_CELL_PROCLAMATION,
             },
             # Note that there is zero other context, due to running with --fresh
             {
@@ -119,6 +119,6 @@ def test_assist_magic_with_fresh_arg(create, ip):
     )
 
     ip.set_next_input.assert_called_once_with(
-        "create a scatterplot from df\nsuperplot(df)",
+        "superplot(df)",
         replace=False,
     )

@@ -9,13 +9,9 @@ from IPython.display import Pretty
 from IPython.core.display_functions import display
 from IPython import get_ipython
 
-import openai
-
 from traceback import TracebackException
 
-NOTEBOOK_CODING_ASSISTANT_TEMPLATE = """You are a notebook coding assistant, designed to help users diagnose error messages.
-Use markdown for formatting. Rely on GitHub flavored markdown for code blocks (specifying the language for syntax highlighting).
-Be concise. Write code examples."""
+from genai.generate import generate_exception_suggestion
 
 
 # this function will be called on exceptions in any cell
@@ -31,53 +27,25 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             Pretty(("Let's see how we can fix this... 🔧")), display_id=True
         )
 
-        # Highly colorized tracebacks do not help GPT as much as a clean plaintext
-        # traceback.
+        # Highly colorized tracebacks do not help GPT as much as a clean plaintext traceback.
         formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)
         plaintext_traceback = "\n".join(formatted)
 
-        # Cap our error report at ~1024 characters
-        error_report = f"{etype.__name__}: {evalue}\n{plaintext_traceback}"
-
-        if len(error_report) > 1024:
-            error_report = error_report[:1024] + "\n..."
-
-        messages = [
-            # Establish the context in which GPT will respond with role: assistant
-            {
-                "role": "system",
-                "content": NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
-            },
-            # The user sent code
-            {"role": "user", "content": code},
-            # The system literally wrote back with the error
-            {
-                "role": "system",
-                "content": error_report,
-            },
-            # expectation is that ChatGPT responds with:
-            # { "role": "assistant", "content": ... }
-        ]
-
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
+        suggestion = generate_exception_suggestion(
+            code=code,
+            etype=etype,
+            evalue=evalue,
+            plaintext_traceback=plaintext_traceback,
         )
-
-        # display the suggestion
-        content = completion["choices"][0]["message"]["content"]
-        suggestion = content
 
         heading.update(
             {
                 "text/markdown": f"## 💡 Suggestion",
+                # For command line `ipython`, leave a newline since we can't use display updates to replace the 🔧 line
                 "text/plain": "",
             },
             raw=True,
         )
-
-        # IPython.display.Markdown() doesn't return a plaintext version so we must return a raw display for use
-        # in `ipython`.
 
         display(
             {
