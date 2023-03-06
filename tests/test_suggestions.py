@@ -1,7 +1,7 @@
 import sys
 from unittest import mock
 
-from genai import suggestions
+from genai import suggestions, generate
 
 
 def test_register():
@@ -56,7 +56,7 @@ def test_custom_exc(create, publish_display_data, display, ip):
     assert len(kwargs["messages"]) == 3
     assert kwargs["messages"][0] == {
         "role": "system",
-        "content": suggestions.NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
+        "content": generate.NOTEBOOK_ERROR_DIAGNOSER_PROCLAMATION,
     }
     assert kwargs["messages"][1] == {
         "role": "user",
@@ -132,7 +132,7 @@ def test_custom_exc_long_traceback(create, publish_display_data, display, ip):
     assert len(kwargs["messages"]) == 3
     assert kwargs["messages"][0] == {
         "role": "system",
-        "content": suggestions.NOTEBOOK_CODING_ASSISTANT_TEMPLATE,
+        "content": generate.NOTEBOOK_ERROR_DIAGNOSER_PROCLAMATION,
     }
     assert kwargs["messages"][1] == {
         "role": "user",

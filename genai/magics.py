@@ -88,10 +88,15 @@ def assist(line, cell):
 
     progress.update(completion_made())
 
-    new_cell = f"""{cell_text}\n{generated_text}"""
+    new_cell = generated_text
 
     if args.in_place:
-        new_cell = f"""#%%assist {line}\n{cell_text}\n{generated_text}"""
+        # Since we're running it in place, keep the context of what was sent in.
+        # The preamble is a comment with the magic line and the original cell text all commented out
+        processed_cell_text = "\n".join(f"# {line}" for line in cell_text.splitlines())
+        preamble = f"""#%%assist {line}\n{processed_cell_text}"""
+
+        new_cell = f"""{preamble}\n{generated_text}"""
 
     ip.set_next_input(
         new_cell,
