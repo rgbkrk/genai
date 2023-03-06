@@ -1,12 +1,10 @@
 import random
 
-
-def h3(text):
-    return f"<h3>{text}</h3>"
+from IPython.display import Pretty
 
 
 def starting_message():
-    return h3(
+    return Pretty(
         random.choice(
             [
                 "Phoning a friend 📲",
@@ -27,7 +25,7 @@ def starting_message():
 
 
 def completion_made():
-    return h3(
+    return Pretty(
         random.choice(
             [
                 "Enjoy your BRAND NEW CELL 🚙",

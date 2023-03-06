@@ -3,7 +3,7 @@
 from IPython import get_ipython
 from IPython.core.magic import cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
-from IPython.display import display, HTML
+from IPython.display import display
 
 from genai.components import completion_made, starting_message
 from genai.context import get_historical_context
@@ -68,7 +68,7 @@ def assist(line, cell):
     # how can I query for pokemon via the PokéAPI?
     ```
     """
-    progress = display(HTML(starting_message()), display_id=True)
+    progress = display(starting_message(), display_id=True)
 
     args = parse_argstring(assist, line)
 
@@ -86,7 +86,7 @@ def assist(line, cell):
 
     generated_text = generate_next_cell(context, cell_text)
 
-    progress.update(HTML(completion_made()))
+    progress.update(completion_made())
 
     new_cell = f"""{cell_text}\n{generated_text}"""
 
