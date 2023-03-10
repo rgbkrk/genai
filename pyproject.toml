@@ -13,7 +13,7 @@ license = "BSD-3-Clause"
 readme = "README.md"
 # old setup.cfg had a bdist_wheel option.
 # To build a wheel, use poetry build -f wheel
-keywords = ["notebook", "api", "noteable", "chatgpt", "gpt3", "openai", "ipython"]
+keywords = ["notebook", "api", "noteable", "chatgpt", "gpt3", "openai", "ipython", "traceback", "assist", "llm"]
 classifiers = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: BSD License',
