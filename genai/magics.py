@@ -84,7 +84,7 @@ def assist(line, cell):
         print("submission:", cell)
         print("context:", context)
 
-    # Since we cannot replace after a set_next_input, we cannot do streaming
+    # Pass streaming as False since we cannot replace after a `set_next_input`
     generated_text = generate_next_cell(context, cell_text, stream=False)
 
     progress.update(completion_made())
