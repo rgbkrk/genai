@@ -10,7 +10,7 @@
   projects
 """
 
-__version__ = "0.11.0"
+from _version import __version__
 
 
 def load_ipython_extension(ipython):
