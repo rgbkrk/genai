@@ -10,8 +10,6 @@
   projects
 """
 
-from _version import __version__
-
 
 def load_ipython_extension(ipython):
     import genai.suggestions
