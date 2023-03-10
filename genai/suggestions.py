@@ -14,6 +14,29 @@ from traceback import TracebackException
 from genai.generate import generate_exception_suggestion
 
 
+def can_handle_display_updates():
+    """Determine (roughly) if the client can handle display updates."""
+    try:
+        from IPython import get_ipython
+
+        ipython = get_ipython()
+        if ipython is None:
+            return False
+
+        name = ipython.__class__.__name__
+
+        if name == "ZMQInteractiveShell":
+            return True
+        elif name == "TerminalInteractiveShell":
+            return False
+        else:
+            # Just assume they can otherwise
+            return True
+    except ImportError:
+        # No IPython, so no display updates whatsoever
+        return False
+
+
 # this function will be called on exceptions in any cell
 def custom_exc(shell, etype, evalue, tb, tb_offset=None):
     # still show the error within the notebook, don't just swallow it
@@ -31,29 +54,28 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)
         plaintext_traceback = "\n".join(formatted)
 
+        stream = can_handle_display_updates()
+
         suggestion = generate_exception_suggestion(
             code=code,
             etype=etype,
             evalue=evalue,
             plaintext_traceback=plaintext_traceback,
+            stream=stream,
         )
 
-        heading.update(
-            {
-                "text/markdown": f"## 💡 Suggestion",
-                # For command line `ipython`, leave a newline since we can't use display updates to replace the 🔧 line
-                "text/plain": "",
-            },
-            raw=True,
-        )
+        content = ""
 
-        display(
-            {
-                "text/plain": suggestion,
-                "text/markdown": f"{suggestion}",
-            },
-            raw=True,
-        )
+        for delta in suggestion:
+            content += delta
+
+            heading.update(
+                {
+                    "text/markdown": f"## 💡 Suggestion\n\n{content}",
+                    "text/plain": f"## 💡 Suggestion\n\n{content}",
+                },
+                raw=True,
+            )
 
     except Exception as e:
         print("Error while trying to provide a suggestion: ", e)
