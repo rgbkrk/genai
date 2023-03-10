@@ -67,7 +67,7 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         content = ""
 
         for delta in suggestion:
-            content = content + delta
+            content += delta
 
             heading.update(
                 {
