@@ -10,11 +10,23 @@ As a coding assistant, you'll diagnose errors in Python code written in a Jupyte
 """.strip()
 
 
+def content(completion):
+    return completion["choices"][0]["message"]["content"]
+
+
+def deltas(completion):
+    for chunk in completion:
+        delta = chunk["choices"][0]["delta"]
+        if "content" in delta:
+            yield delta["content"]
+
+
 def generate_next_cell(
     context,  # List[Dict[str, str]]
     text,
+    stream=False,
 ):
-    completion = openai.ChatCompletion.create(
+    response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
             # Establish the context in which GPT will respond
@@ -30,11 +42,13 @@ def generate_next_cell(
                 "content": text,
             },
         ],
+        stream=stream,
     )
 
-    text = completion["choices"][0]["message"]["content"]
-
-    return text
+    if stream:
+        yield from deltas(response)
+    else:
+        yield content(response)
 
 
 def generate_exception_suggestion(
@@ -44,6 +58,7 @@ def generate_exception_suggestion(
     etype,
     evalue,
     plaintext_traceback,
+    stream=False,
 ):
     # Cap our error report at ~1024 characters
     error_report = f"{etype.__name__}: {evalue}\n{plaintext_traceback}"
@@ -66,11 +81,13 @@ def generate_exception_suggestion(
         },
     ]
 
-    completion = openai.ChatCompletion.create(
+    response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
+        stream=stream,
     )
 
-    text = completion["choices"][0]["message"]["content"]
-
-    return text
+    if stream:
+        yield from deltas(response)
+    else:
+        yield content(response)

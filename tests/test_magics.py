@@ -33,6 +33,7 @@ def test_assist_magic(create, ip):
                 "content": "create a scatterplot from df",
             },
         ],
+        stream=False,
     )
 
 
@@ -72,6 +73,7 @@ def test_assist_magic_with_args(create, ip):
                 "content": "create a scatterplot from df",
             },
         ],
+        stream=False,
     )
 
     ip.set_next_input.assert_called_once_with(
@@ -116,6 +118,7 @@ def test_assist_magic_with_fresh_arg(create, ip):
                 "content": "create a scatterplot from df",
             },
         ],
+        stream=False,
     )
 
     ip.set_next_input.assert_called_once_with(

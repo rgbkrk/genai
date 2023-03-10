@@ -71,19 +71,16 @@ def test_custom_exc(create, publish_display_data, display, ip):
     # We also have to look at the publish_display_data calls
     publish_display_data.assert_called()
 
-    # The last call to regular display is the heading
-    heading = display.call_args_list[-1][0][0]
-    assert heading == {"text/markdown": "## 💡 Suggestion", "text/plain": ""}
-
-    last_call = publish_display_data.call_args_list[-1]
+    last_call = display.call_args_list[-1]
 
     # get kwargs from the last call
+    args = last_call[0]
     kwargs = last_call[1]
 
     # Now to check that we're publishing the correct data from the API
-    assert kwargs["data"] == {
-        "text/markdown": "Here's a suggestion",
-        "text/plain": "Here's a suggestion",
+    assert args[0] == {
+        "text/markdown": "## 💡 Suggestion\n\nHere's a suggestion",
+        "text/plain": "## 💡 Suggestion\n\nHere's a suggestion",
     }
 
 
@@ -101,7 +98,7 @@ def test_custom_exc(create, publish_display_data, display, ip):
             {
                 "message": {
                     "role": "assistant",
-                    "content": "Here's a suggestion",
+                    "content": "When you hear 'aaaaaa' you know it's the intro to a 90s Nickolodeon show about monsters.",
                 },
             },
         ],
@@ -155,19 +152,16 @@ def test_custom_exc_long_traceback(create, publish_display_data, display, ip):
     # We also have to look at the publish_display_data calls
     publish_display_data.assert_called()
 
-    # The last call to regular display is the heading
-    heading = display.call_args_list[-1][0][0]
-    assert heading == {"text/markdown": "## 💡 Suggestion", "text/plain": ""}
-
-    last_call = publish_display_data.call_args_list[-1]
+    last_call = display.call_args_list[-1]
 
     # get kwargs from the last call
+    args = last_call[0]
     kwargs = last_call[1]
 
     # Now to check that we're publishing the correct data from the API
-    assert kwargs["data"] == {
-        "text/markdown": "Here's a suggestion",
-        "text/plain": "Here's a suggestion",
+    assert args[0] == {
+        "text/markdown": "## 💡 Suggestion\n\nWhen you hear 'aaaaaa' you know it's the intro to a 90s Nickolodeon show about monsters.",
+        "text/plain": "## 💡 Suggestion\n\nWhen you hear 'aaaaaa' you know it's the intro to a 90s Nickolodeon show about monsters.",
     }
 
 

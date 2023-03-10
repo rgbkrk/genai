@@ -84,19 +84,23 @@ def assist(line, cell):
         print("submission:", cell)
         print("context:", context)
 
-    generated_text = generate_next_cell(context, cell_text)
+    # Since we cannot replace after a set_next_input, we cannot do streaming
+    generated_text = generate_next_cell(context, cell_text, stream=False)
 
     progress.update(completion_made())
 
-    new_cell = generated_text
+    preamble = ""
 
     if args.in_place:
         # Since we're running it in place, keep the context of what was sent in.
         # The preamble is a comment with the magic line and the original cell text all commented out
         processed_cell_text = "\n".join(f"# {line}" for line in cell_text.splitlines())
-        preamble = f"""#%%assist {line}\n{processed_cell_text}"""
+        preamble = f"""#%%assist {line}\n{processed_cell_text}\n"""
 
-        new_cell = f"""{preamble}\n{generated_text}"""
+    new_cell = preamble
+
+    for delta in generated_text:
+        new_cell = new_cell + delta
 
     ip.set_next_input(
         new_cell,
