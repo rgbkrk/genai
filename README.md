@@ -9,7 +9,7 @@ Generate code cells and get recommendations after exceptions.
 
 With the appearance of user assisted AI prompts, this repository brings this magic to notebook magics via ipython and openai.
 
-The repository supports various Jupyter configurations to enable bettwe exception handling recommendations.
+The repository supports various Jupyter configurations to enable better exception handling recommendations.
 <!-- --8<-- [end:intro] -->
 
 <!-- --8<-- [start:requirements] -->
