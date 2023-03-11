@@ -5,11 +5,11 @@ notebook as usual.
 """
 
 
-from IPython.display import Pretty
-from IPython.core.display_functions import display
-from IPython import get_ipython
-
 from traceback import TracebackException
+
+from IPython import get_ipython
+from IPython.core.display_functions import display
+from IPython.display import Pretty
 
 from genai.generate import generate_exception_suggestion
 
@@ -46,9 +46,7 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         # Get the current code
         code = shell.user_ns["In"][-1]
 
-        heading = display(
-            Pretty(("Let's see how we can fix this... 🔧")), display_id=True
-        )
+        heading = display(Pretty(("Let's see how we can fix this... 🔧")), display_id=True)
 
         # Highly colorized tracebacks do not help GPT as much as a clean plaintext traceback.
         formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)

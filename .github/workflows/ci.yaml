@@ -1,6 +1,6 @@
 name: CI
 
-on: # yamllint disable-line rule:truthy
+on:
   push:
     branches:
       - main
@@ -11,26 +11,38 @@ on: # yamllint disable-line rule:truthy
 jobs:
   test:
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python_version: ["3.8", "3.9", "3.10"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
+      - name: Setup nox
+        uses: daisylb/setup-nox@v2.1.0
+      - name: Setup poetry
+        uses: Gr1N/setup-poetry@v7
       - name: Install dependencies
         run: |
-          pip install poetry
-          pip install ipython
-          poetry install --no-interaction
+          poetry install --all-extras --with dev
+          pip install nox-poetry
       - name: Run tests
-        run: poetry run pytest
-  format-check:
+        run: nox -s test-${{ matrix.python_version }}
+      - name: Generate coverage XML
+        run: nox -s generate_coverage_xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+  lint:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Install Black
-        run: pip install black
-      - name: Check black
-        run: black --check genai tests
+      - name: Setup nox
+        uses: daisylb/setup-nox@v2.1.0
+      - name: Setup poetry
+        uses: Gr1N/setup-poetry@v7
+      - name: Install dependencies
+        run: |
+          poetry install --all-extras --with dev
+          pip install nox-poetry
+      - name: Run lint
+        run: nox -s lint
