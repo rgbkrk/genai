@@ -38,11 +38,15 @@ vdom = "^0.6"
 ipython = "^8.10.0"
 
 [tool.poetry.dev-dependencies]
+flake8-docstrings = "^1.6.0"
 pytest = "^7.2.2"
 black = "^23.1.0"
+isort = "^5.10.1"
 pytest-cov = "^4.0.0"
+pytest-asyncio = "^0.19.0"
 nox = "^2022.1.7"
 nox-poetry = "^1.0.0"
+pytest-mock = "^3.8.2"
 bump2version = "^1.0.1"
 
 [build-system]
