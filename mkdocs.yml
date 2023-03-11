@@ -1,0 +1,56 @@
+site_name: Genai
+site_description: A Python Library for generating code cells and getting recommendations after exceptions.
+#site_url: https://???
+
+theme:
+  name: 'material'
+  palette:
+    - scheme: 'default'
+      media: '(prefers-color-scheme: light)'
+      toggle:
+        icon: 'material/lightbulb'
+        name: "Switch to dark mode"
+    - scheme: 'slate'
+      media: '(prefers-color-scheme: dark)'
+      primary: 'blue'
+      toggle:
+        icon: 'material/lightbulb-outline'
+        name: 'Switch to light mode'
+  features:
+    - navigation.sections
+
+repo_name: noteable-io/genai
+repo_url: https://github.com/noteable-io/genai/
+edit_uri: ""
+
+nav:
+  - Introduction: 'index.md'
+  - Contributing: 'contributing.md'
+  - Usage:
+      - QuickStart: 'quickstart.md'
+  - Code Reference: reference/
+  - Changes:
+      - Log: 'changelog.md'
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.snippets
+  - toc:
+      permalink: "#"
+
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - docs/gen_doc_stubs.py
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [genai]
+          rendering:
+            show_source: true
+      watch: [genai, README.md, CONTRIBUTING.md, CHANGELOG.md]
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
