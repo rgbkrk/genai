@@ -1,0 +1,10 @@
+# Pin packages for RTD builds
+# https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html#pinning-dependencies
+mkdocs
+mkdocs-material
+mkdocstrings[python]
+mkautodoc
+mkdocs-gen-files
+mkdocs-literate-nav
+mkdocs-section-index
+pymdown-extensions
