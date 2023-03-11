@@ -138,9 +138,7 @@ def test_custom_exc_long_traceback(create, publish_display_data, display, ip):
 
     error_message = kwargs["messages"][2]
     assert error_message["role"] == "system"
-    assert error_message["content"].startswith(
-        "Exception: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    )
+    assert error_message["content"].startswith("Exception: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
     assert error_message["content"].endswith("\n...")
 
     # Our max length plus the newlined ellipsis
