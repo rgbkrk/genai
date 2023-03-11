@@ -1,3 +1,5 @@
+[Install](#installation) | [License](./LICENSE) | [Code of Conduct](./CODE_OF_CONDUCT.md) | [Contributing](./CONTRIBUTING.md)
+
 # GenAI: generative AI tooling for IPython
 
 Generate code cells and get recommendations after exceptions.
