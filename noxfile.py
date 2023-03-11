@@ -1,7 +1,7 @@
 import nox
 import nox_poetry
 
-LINT_PATHS = ["papermill_origami", "noxfile.py"]
+LINT_PATHS = ["genai", "noxfile.py"]
 
 nox.options.reuse_existing_virtualenv = True
 nox.options.sessions = ["lint", "test"]
