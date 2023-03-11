@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --all-extras --with dev
-          pip install nox-poetry pytest
+          pip install nox-poetry
       - name: Run tests
         run: nox -s test-${{ matrix.python_version }}
       - name: Generate coverage XML
@@ -43,6 +43,6 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --all-extras --with dev
-          pip install nox-poetry pytest
+          pip install nox-poetry
       - name: Run lint
         run: nox -s lint
