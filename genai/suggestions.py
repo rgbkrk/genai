@@ -50,8 +50,26 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         return
 
     try:
-        # Get the current code
-        code = shell.user_ns["In"][-1]
+        code = None
+
+        execution_count = shell.execution_count
+
+        In = shell.user_ns["In"]
+        history_manager = shell.history_manager
+
+        # If the history is available, use that as it has the raw inputs (including magics)
+        if (history_manager is not None) and (
+            execution_count == len(history_manager.input_hist_raw) - 1
+        ):
+            code = shell.history_manager.input_hist_raw[execution_count]
+        # Fallback on In
+        elif In is not None and execution_count == len(In) - 1:
+            # Otherwise, use the current input buffer
+            code = In[execution_count]
+        # Otherwise history may not have been stored (store_history=False), so we should not send the
+        # code to GPT.
+        else:
+            code = None
 
         heading = display(Pretty(("Let's see how we can fix this... 🔧")), display_id=True)
 
