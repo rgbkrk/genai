@@ -2,6 +2,13 @@
 Creates user and system messages as context for ChatGPT, using the history of the current IPython session.
 """
 
+try:
+    import pandas as pd
+
+    PANDAS_INSTALLED = True
+except ImportError:
+    PANDAS_INSTALLED = False
+
 
 def craft_user_message(code):
     return {
@@ -11,6 +18,21 @@ def craft_user_message(code):
 
 
 def craft_output_message(output):
+    if PANDAS_INSTALLED:
+        with pd.option_context(
+            'max_rows', 5, 'display.html.table_schema', False, 'display.max_columns', 20
+        ):
+            if isinstance(output, pd.DataFrame):
+                return {
+                    "content": output.to_markdown(),
+                    "role": "system",
+                }
+
+            return {
+                "content": repr(output),
+                "role": "system",
+            }
+
     return {
         "content": repr(output),
         "role": "system",
