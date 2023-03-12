@@ -42,6 +42,13 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
     # still show the error within the notebook, don't just swallow it
     shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
 
+    # On interrupt, just let it be
+    if etype == KeyboardInterrupt:
+        return
+    # On exit, release the user
+    elif etype == SystemExit:
+        return
+
     try:
         # Get the current code
         code = shell.user_ns["In"][-1]
@@ -75,6 +82,16 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
 
     except Exception as e:
         print("Error while trying to provide a suggestion: ", e)
+    except KeyboardInterrupt:
+        # If we have the display heading, we can update it with empty text.
+        if "heading" in locals():
+            heading.update(
+                {
+                    "text/markdown": "",
+                    "text/plain": "",
+                },
+                raw=True,
+            )
 
 
 def register(ipython=None):
