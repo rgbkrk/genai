@@ -72,20 +72,29 @@ def generate_exception_suggestion(
     if len(error_report) > 1024:
         error_report = error_report[:1024] + "\n..."
 
-    messages = [
+    messages = []
+
+    messages.append(
         # Establish the context in which GPT will respond with role: assistant
         {
             "role": "system",
             "content": NOTEBOOK_ERROR_DIAGNOSER_PROCLAMATION,
         },
-        # The user sent code
-        {"role": "user", "content": code},
-        # The system literally wrote back with the error
+    )
+
+    if code is not None:
+        messages.append(
+            # The user sent code
+            {"role": "user", "content": code}
+        )
+
+    messages.append(
+        # The system wrote back with the error
         {
             "role": "system",
             "content": error_report,
         },
-    ]
+    )
 
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
