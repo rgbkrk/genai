@@ -20,7 +20,7 @@ def craft_user_message(code):
 def craft_output_message(output):
     if PANDAS_INSTALLED:
         with pd.option_context(
-            'max_rows', 5, 'display.html.table_schema', False, 'display.max_columns', 20
+            'display.max_rows', 2, 'display.html.table_schema', False, 'display.max_columns', 2
         ):
             if isinstance(output, pd.DataFrame):
                 return {
