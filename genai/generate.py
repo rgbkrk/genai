@@ -6,7 +6,13 @@ As a coding assistant, your task is to help users write code in Python within Ju
 
 
 NOTEBOOK_ERROR_DIAGNOSER_PROCLAMATION = """
-As a coding assistant, you'll diagnose errors in Python code written in a Jupyter Notebook. Use %pip instead of !pip and format your response using GitHub flavored markdown. Provide concise code examples in your response which will be rendered in Markdown in the notebook.
+As a coding assistant, you'll diagnose errors in Python code written in a Jupyter Notebook. Format your response using markdown. Making sure to include the language around code blocks, like
+
+```python
+# code
+```
+
+Provide concise code examples in your response which will be rendered in Markdown in the notebook. The user will not be able to respond to your response.
 """.strip()  # noqa: E501
 
 
