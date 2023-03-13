@@ -36,7 +36,7 @@ def can_handle_display_updates():
         return False
 
 
-class Stage(Enum):
+class Stage(str, Enum):
     """The stage of feedback generation"""
 
     STARTING = "starting"
