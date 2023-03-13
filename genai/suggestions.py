@@ -4,12 +4,11 @@ ChatGPT in order to help debug the code. It will also display the error in the
 notebook as usual.
 """
 
-
+from enum import Enum
 from traceback import TracebackException
 
 from IPython import get_ipython
 from IPython.core.display_functions import display
-from IPython.display import Pretty
 
 from genai.generate import generate_exception_suggestion
 
@@ -35,6 +34,30 @@ def can_handle_display_updates():
     except ImportError:
         # No IPython, so no display updates whatsoever
         return False
+
+
+class Stage(Enum):
+    """The stage of feedback generation"""
+
+    STARTING = "starting"
+    GENERATING = "generating"
+    FINISHED = "finished"
+
+
+def GenaiMarkdown(text, stage=None):
+    return (
+        {
+            "text/markdown": text,
+            "text/plain": text,
+        },
+        {
+            "text/markdown": {
+                "genai": {
+                    "stage": stage,
+                }
+            }
+        },
+    )
 
 
 # this function will be called on exceptions in any cell
@@ -71,7 +94,8 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         else:
             code = None
 
-        heading = display(Pretty(("Let's see how we can fix this... 🔧")), display_id=True)
+        data, metadata = GenaiMarkdown("Let's see how we can fix this... 🔧", stage=Stage.STARTING)
+        heading = display(data, metadata=metadata, raw=True, display_id=True)
 
         # Highly colorized tracebacks do not help GPT as much as a clean plaintext traceback.
         formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)
@@ -92,13 +116,16 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         for delta in suggestion:
             content += delta
 
+            data, metadata = GenaiMarkdown(f"## 💡 Suggestion\n\n{content}", stage=Stage.GENERATING)
+
             heading.update(
-                {
-                    "text/markdown": f"## 💡 Suggestion\n\n{content}",
-                    "text/plain": f"## 💡 Suggestion\n\n{content}",
-                },
+                data,
+                metadata=metadata,
                 raw=True,
             )
+
+        data, metadata = GenaiMarkdown(f"## 💡 Suggestion\n\n{content}", stage=Stage.FINISHED)
+        heading.update(data, metadata=metadata, raw=True)
 
     except Exception as e:
         print("Error while trying to provide a suggestion: ", e)
