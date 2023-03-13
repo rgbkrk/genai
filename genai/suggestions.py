@@ -77,12 +77,14 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)
         plaintext_traceback = "\n".join(formatted)
 
+        stream = can_handle_display_updates()
+
         suggestion = generate_exception_suggestion(
             code=code,
             etype=etype,
             evalue=evalue,
             plaintext_traceback=plaintext_traceback,
-            stream=False,
+            stream=stream,
         )
 
         content = ""
