@@ -5,7 +5,7 @@
 
 [tool.poetry]
 name = "genai"
-version = "0.11.0"
+version = "1.0.0"
 description = "Generative AI for IPython (enhance your code cells)"
 authors = ["Kyle Kelley <rgbkrk@gmail.com>"]
 maintainers = ["Kyle Kelley <rgbkrk@gmail.com>"]
