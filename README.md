@@ -4,6 +4,8 @@
 
 Generate code cells and get recommendations after exceptions.
 
+![Genai making a suggestion followed by running suggested code](https://user-images.githubusercontent.com/836375/225129552-a779d005-cd78-4f6c-bae3-2b6eda4aba93.gif)
+
 - [Blog Post](https://noteable.io/blog/introducing-genai/)
 - [Example Notebook](https://app.noteable.io/f/1605d16d-f5d3-4099-8fec-2ca727075b3b/Introducing-Genai.ipynb)
 
