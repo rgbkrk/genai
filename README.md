@@ -4,7 +4,7 @@
 
 Generate code cells and get recommendations after exceptions.
 
-- [Blog Post](https://noteable.io/blog/introducing-genai-the-generative-ai-for-ipython)
+- [Blog Post](https://noteable.io/blog/introducing-genai/)
 - [Example Notebook](https://app.noteable.io/f/1605d16d-f5d3-4099-8fec-2ca727075b3b/Introducing-Genai.ipynb)
 
 <!-- --8<-- [start:intro] -->
