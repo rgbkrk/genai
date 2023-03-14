@@ -4,21 +4,29 @@
 
 Generate code cells and get recommendations after exceptions.
 
+- [Blog Post](noteable.io/blog/introducing-genai-the-generative-ai-for-ipython)
+- [Example Notebook](https://app.noteable.io/f/1605d16d-f5d3-4099-8fec-2ca727075b3b/Introducing-Genai.ipynb)
+
 <!-- --8<-- [start:intro] -->
+
 ## Introdution
 
 With the appearance of user assisted AI prompts, this repository brings this magic to notebook magics via ipython and openai.
 
 The repository supports various Jupyter configurations to enable better exception handling recommendations.
+
 <!-- --8<-- [end:intro] -->
 
 <!-- --8<-- [start:requirements] -->
+
 ## Requirements
 
 Python 3.8+
+
 <!-- --8<-- [end:requirements] -->
 
 <!-- --8<-- [start:install] -->
+
 ## Installation
 
 ### Poetry
@@ -28,12 +36,15 @@ poetry add genai
 ```
 
 ### Pip
+
 ```shell
 pip install genai
 ```
+
 <!-- --8<-- [end:install] -->
 
 <!-- --8<-- [start:start] -->
+
 ## Loading the IPython extension
 
 Make sure to set the `OPENAI_API_KEY` environment variable first before using it in IPython or your [preferred notebook platform of choice](https://noteable.io/).
@@ -135,4 +146,5 @@ In [3]: # generated with %%assist
 In [6]: content
 Out[6]: b'[["POP","state"],\n["4903185","01"],\n["731545","02"],\n["7278717","04"],\n["3017804","05"],\n["39512223","06"],\n["5758736","08"],\n["973764","10"],\n["705749","11"],\n["3565287","09"],\n["21477737","12"],\n["10617423","13"],\n["1787065","16"],\n["1415872","15"],\n["12671821","17"],\n["6732219","18"],\n["3155070","19"],\n["2913314","20"],\n["4467673","21"],\n["4648794","22"],\n["1344212","23"],\n["6045680","24"],\n["6892503","25"],\n["9986857","26"],\n["5639632","27"],\n["2976149","28"],\n["6137428","29"],\n["1068778","30"],\n["1934408","31"],\n["3080156","32"],\n["1359711","33"],\n["8882190","34"],\n["2096829","35"],\n["19453561","36"],\n["10488084","37"],\n["762062","38"],\n["11689100","39"],\n["3956971","40"],\n["4217737","41"],\n["12801989","42"],\n["1059361","44"],\n["5148714","45"],\n["884659","46"],\n["6829174","47"],\n["28995881","48"],\n["623989","50"],\n["3205958","49"],\n["8535519","51"],\n["7614893","53"],\n["1792147","54"],\n["5822434","55"],\n["578759","56"],\n["3193694","72"]]'
 ```
+
 <!-- --8<-- [end:start] -->
