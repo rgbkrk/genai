@@ -3,16 +3,30 @@
 All notable changes will be documented here.
 
 ---
+
 ## Unreleased
 
 ### Added
 
-## `0.11.0`
-_2023-03-06_
+## `1.0.2`
 
-### Added
+### Fixed
+
+- Correctly lowered text formatted context size on `DataFrame`s and `Series` for `%%assist` magic command
+
+## `1.0.1`
 
 ### Changed
 
-  
-### Fixed
+- Updated README.md
+
+## `1.0.0`
+
+_2023-03-14_
+
+🎉 Initial release 🎉
+
+### Added
+
+- Custom exception suggestions
+- `%%assist` magic command to generate code from natural language

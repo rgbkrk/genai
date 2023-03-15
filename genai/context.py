@@ -20,9 +20,26 @@ def craft_user_message(code):
 def craft_output_message(output):
     if PANDAS_INSTALLED:
         with pd.option_context(
-            'display.max_rows', 2, 'display.html.table_schema', False, 'display.max_columns', 2
+            'display.max_rows', 5, 'display.html.table_schema', False, 'display.max_columns', 20
         ):
             if isinstance(output, pd.DataFrame):
+                # to_markdown() does not use the max_rows and max_columns options
+                # so we have to truncate the dataframe ourselves
+
+                num_columns = min(pd.options.display.max_columns, output.shape[1])
+                num_rows = min(pd.options.display.max_rows, output.shape[0])
+
+                sampled = output.sample(num_columns, axis=1).sample(num_rows, axis=0)
+
+                return {
+                    "content": sampled.to_markdown(),
+                    "role": "system",
+                }
+
+            if isinstance(output, pd.Series):
+                # Similar truncation for series
+                num_columns = min(pd.options.display.max_columns, output.shape[1])
+                sampled = output.sample(num_columns)
                 return {
                     "content": output.to_markdown(),
                     "role": "system",
