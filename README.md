@@ -2,20 +2,27 @@
 
 # GenAI: generative AI tooling for IPython
 
-Generate code cells and get recommendations after exceptions.
+Generate code cells and get recommendations after exceptions in all Jupyter environments, including IPython, JupyterLab, Jupyter Notebook, and Noteable.
 
-![Genai making a suggestion followed by running suggested code](https://user-images.githubusercontent.com/836375/225129552-a779d005-cd78-4f6c-bae3-2b6eda4aba93.gif)
+TL;DR
+
+```
+%pip install genai
+%load_ext genai
+```
+
+## Genai In Action
+
+![Genai making a suggestion followed by running suggested code](https://user-images.githubusercontent.com/836375/225177905-17cfb526-60f8-486d-b468-60a6a01db02e.gif)
 
 - [Blog Post](https://noteable.io/blog/introducing-genai/)
 - [Example Notebook](https://app.noteable.io/f/1605d16d-f5d3-4099-8fec-2ca727075b3b/Introducing-Genai.ipynb)
 
 <!-- --8<-- [start:intro] -->
 
-## Introdution
+## Introduction
 
-With the appearance of user assisted AI prompts, this repository brings this magic to notebook magics via ipython and openai.
-
-The repository supports various Jupyter configurations to enable better exception handling recommendations.
+We've taken the context from IPython, mixed it with OpenAI's Large Language Models, and given you the power to generate code cells and get recommendations after exceptions in all Jupyter environments, including IPython, JupyterLab, Jupyter Notebook, and Noteable.
 
 <!-- --8<-- [end:intro] -->
 
