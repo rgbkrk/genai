@@ -38,8 +38,8 @@ def craft_output_message(output):
 
             if isinstance(output, pd.Series):
                 # Similar truncation for series
-                num_columns = min(pd.options.display.max_columns, output.shape[1])
-                sampled = output.sample(num_columns)
+                num_rows = min(pd.options.display.max_rows, output.shape[0])
+                sampled = output.sample(num_rows)
                 return {
                     "content": output.to_markdown(),
                     "role": "system",
