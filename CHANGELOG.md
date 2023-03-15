@@ -8,6 +8,13 @@ All notable changes will be documented here.
 
 ### Added
 
+## `1.0.3`
+
+Fixed
+
+- Sample Pandas Series properly
+- Include `tabulate` dependency for markdown conversion
+
 ## `1.0.2`
 
 ### Fixed
