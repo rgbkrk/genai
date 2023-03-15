@@ -36,6 +36,7 @@ python = "^3.8"
 openai = "^0.27.0"
 vdom = "^0.6"
 ipython = "^8.10.0"
+tabulate = "^0.9.0"
 
 [tool.poetry.dev-dependencies]
 flake8-docstrings = "^1.6.0"
