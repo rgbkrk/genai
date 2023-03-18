@@ -9,54 +9,61 @@ try:
 except ImportError:
     PANDAS_INSTALLED = False
 
+from . import tokens
+
+
+def craft_message(text, role="user"):
+    return {"content": text, "role": role}
+
 
 def craft_user_message(code):
-    return {
-        "content": code,
-        "role": "user",
-    }
+    return craft_message(code, "user")
+
+
+def repr_genai_pandas(output):
+    if not PANDAS_INSTALLED:
+        return repr(output)
+
+    if isinstance(output, pd.DataFrame):
+        # to_markdown() does not use the max_rows and max_columns options
+        # so we have to truncate the dataframe ourselves
+
+        num_columns = min(pd.options.display.max_columns, output.shape[1])
+        num_rows = min(pd.options.display.max_rows, output.shape[0])
+
+        sampled = output.sample(num_columns, axis=1).sample(num_rows, axis=0)
+
+        return sampled.to_markdown()
+
+    if isinstance(output, pd.Series):
+        # Similar truncation for series
+        num_rows = min(pd.options.display.max_rows, output.shape[0])
+        sampled = output.sample(num_rows)
+        return sampled.to_markdown()
+
+    return repr(output)
+
+
+def repr_genai(output):
+    '''Compute a GPT-3.5 friendly representation of the output of a cell.
+
+    For DataFrames and Series this means Markdown.
+    '''
+    if not PANDAS_INSTALLED:
+        return repr(output)
+
+    with pd.option_context(
+        'display.max_rows', 5, 'display.html.table_schema', False, 'display.max_columns', 20
+    ):
+        return repr_genai_pandas(output)
 
 
 def craft_output_message(output):
-    if PANDAS_INSTALLED:
-        with pd.option_context(
-            'display.max_rows', 5, 'display.html.table_schema', False, 'display.max_columns', 20
-        ):
-            if isinstance(output, pd.DataFrame):
-                # to_markdown() does not use the max_rows and max_columns options
-                # so we have to truncate the dataframe ourselves
-
-                num_columns = min(pd.options.display.max_columns, output.shape[1])
-                num_rows = min(pd.options.display.max_rows, output.shape[0])
-
-                sampled = output.sample(num_columns, axis=1).sample(num_rows, axis=0)
-
-                return {
-                    "content": sampled.to_markdown(),
-                    "role": "system",
-                }
-
-            if isinstance(output, pd.Series):
-                # Similar truncation for series
-                num_rows = min(pd.options.display.max_rows, output.shape[0])
-                sampled = output.sample(num_rows)
-                return {
-                    "content": output.to_markdown(),
-                    "role": "system",
-                }
-
-            return {
-                "content": repr(output),
-                "role": "system",
-            }
-
-    return {
-        "content": repr(output),
-        "role": "system",
-    }
+    """Craft a message from the output of a cell."""
+    return craft_message(repr_genai(output), "system")
 
 
-# tokens to idenfify which cells to ignore based on the start
+# tokens to idenfify which cells to ignore based on the first line
 ignore_tokens = [
     "# genai:ignore",
     "#ignore",
@@ -70,7 +77,7 @@ ignore_tokens = [
 ]
 
 
-def get_historical_context(ipython, num_messages=5):
+def get_historical_context(ipython, num_messages=5, model="gpt-3.5-turbo-0301"):
     """Create a series of messages to use as context for ChatGPT."""
     raw_inputs = ipython.history_manager.input_hist_raw
 
@@ -95,5 +102,7 @@ def get_historical_context(ipython, num_messages=5):
 
         if index in outputs:
             context.append(craft_output_message(outputs[index]))
+
+    context = tokens.trim_messages_to_fit_token_limit(context, model=model)
 
     return context
