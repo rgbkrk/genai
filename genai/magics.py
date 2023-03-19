@@ -23,6 +23,11 @@ from genai.tokens import trim_messages_to_fit_token_limit
     action="store_true",
     help="Replace the current cell with the generated code",
 )
+@argument(
+    "--model",
+    default="gpt-3.5-turbo-0301",
+    help="the model to use",
+)
 @cell_magic
 def assist(line, cell):
     """Generate code cells for notebooks using OpenAI's API.
@@ -76,7 +81,7 @@ def assist(line, cell):
     ip = get_ipython()
     cell_text = cell.strip()
 
-    model = "gpt-3.5-turbo-0301"
+    model = args.model
 
     messages = []
     if not args.fresh:
