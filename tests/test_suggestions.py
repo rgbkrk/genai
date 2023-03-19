@@ -1,8 +1,7 @@
 import sys
 from unittest import mock
 
-from genai import suggestions, generate
-
+from genai import generate, suggestions
 from genai.suggestions import can_handle_display_updates
 
 

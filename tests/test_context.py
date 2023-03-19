@@ -1,7 +1,8 @@
-from genai.context import get_historical_context, repr_genai_pandas, repr_genai
 from unittest.mock import MagicMock, call, patch
 
 import pandas as pd
+
+from genai.context import get_historical_context, repr_genai, repr_genai_pandas
 
 
 class FakeOutput:

@@ -1,8 +1,9 @@
-from enum import Enum
-from binascii import hexlify
-from IPython.core import display_functions
 import os
-from typing import Any, Iterator, Union, Optional, Tuple, Dict
+from binascii import hexlify
+from enum import Enum
+from typing import Any, Dict, Iterator, Optional, Tuple, Union
+
+from IPython.core import display_functions
 
 
 class Stage(str, Enum):

@@ -1,6 +1,5 @@
-from unittest import mock
-
 import sys
+from unittest import mock
 
 from genai import generate
 

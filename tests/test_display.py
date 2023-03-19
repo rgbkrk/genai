@@ -1,7 +1,9 @@
-import pytest
 from unittest import mock
-from genai.display import GenaiMarkdown, Stage
+
+import pytest
 from IPython.core import display_functions
+
+from genai.display import GenaiMarkdown, Stage
 
 
 def test_genai_markdown_init_default(ip):

@@ -8,8 +8,8 @@ from traceback import TracebackException
 
 from IPython import get_ipython
 
-from genai.generate import generate_exception_suggestion
 from genai.display import GenaiMarkdown, Stage
+from genai.generate import generate_exception_suggestion
 
 
 def can_handle_display_updates():
