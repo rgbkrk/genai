@@ -1,9 +1,7 @@
 """
 Creates user and system messages as context for ChatGPT, using the history of the current IPython session.
 """
-from typing import Any, Dict, List
-
-from IPython.core.interactiveshell import InteractiveShell
+from typing import Any, Dict, Optional
 
 try:
     import pandas as pd
@@ -12,8 +10,6 @@ try:
 except ImportError:
     PANDAS_INSTALLED = False
 
-from . import tokens
-
 
 def craft_message(text: str, role: str = "user") -> Dict[str, str]:
     return {"content": text, "role": role}
@@ -21,6 +17,27 @@ def craft_message(text: str, role: str = "user") -> Dict[str, str]:
 
 def craft_user_message(code: str) -> Dict[str, str]:
     return craft_message(code, "user")
+
+
+def craft_output_message(output: Any) -> Dict[str, str]:
+    """Craft a message from the output of an execution."""
+    return craft_message(repr_genai(output), "system")
+
+
+class Context:
+    def __init__(self):
+        self._context = []
+
+    def append(self, text: str, execution_count: Optional[int] = None, role: str = "user"):
+        contextual_message = {
+            "message": craft_message(text, role=role),
+            "execution_count": execution_count,
+        }
+        self._context.append(contextual_message)
+
+    @property
+    def messages(self):
+        return [message["message"] for message in self._context]
 
 
 def repr_genai_pandas(output: Any) -> str:
@@ -58,11 +75,6 @@ def repr_genai(output: Any) -> str:
         return repr_genai_pandas(output)
 
 
-def craft_output_message(output: Any) -> Dict[str, str]:
-    """Craft a message from the output of an execution."""
-    return craft_message(repr_genai(output), "system")
-
-
 # tokens to idenfify which cells to ignore based on the first line
 ignore_tokens = [
     "# genai:ignore",
@@ -77,32 +89,20 @@ ignore_tokens = [
 ]
 
 
-def get_historical_context(
-    ipython: 'InteractiveShell', num_messages: int = 5, model: str = "gpt-3.5-turbo-0301"
-) -> List[Dict[str, str]]:
-    """Create a series of messages to use as context for ChatGPT."""
-    raw_inputs = ipython.history_manager.input_hist_raw
+def build_context(history_manager, start=1, stop=None):
+    context = Context()
 
-    # Now filter out any inputs that start with our filters
-    # This has to keep the input index as the key for the output
-    inputs = {}
-    for i, input in enumerate(raw_inputs):
-        if input is None or input.strip() == "":
+    for session, execution_counter, cell_text in history_manager.get_range(
+        session=0, start=start, stop=stop
+    ):
+        print('session', session)
+        if any(cell_text.startswith(token) for token in ignore_tokens):
             continue
 
-        if not any(input.startswith(token) for token in ignore_tokens):
-            inputs[i] = input
+        context.append(cell_text, role="user", execution_count=execution_counter)
 
-    outputs = ipython.history_manager.output_hist
-    indices = sorted(inputs.keys())
-    context = []
+        output = history_manager.output_hist.get(execution_counter)
+        if output is not None:
+            context.append(repr_genai(output), role="system", execution_count=execution_counter)
 
-    # We will use the last `num_messages` inputs and outputs to establish context
-    for index in indices[-num_messages:]:
-        context.append(craft_user_message(inputs[index]))
-
-        if index in outputs:
-            context.append(craft_output_message(outputs[index]))
-
-    context = tokens.trim_messages_to_fit_token_limit(context, model=model)
     return context
