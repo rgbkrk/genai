@@ -1,3 +1,6 @@
+"""
+Creates user and system messages as context for ChatGPT, using the history of the current IPython session.
+"""
 from typing import Any, Dict, List
 
 from IPython.core.interactiveshell import InteractiveShell
@@ -25,12 +28,15 @@ def repr_genai_pandas(output: Any) -> str:
         return repr(output)
 
     if isinstance(output, pd.DataFrame):
+        # to_markdown() does not use the max_rows and max_columns options
+        # so we have to truncate the dataframe ourselves
         num_columns = min(pd.options.display.max_columns, output.shape[1])
         num_rows = min(pd.options.display.max_rows, output.shape[0])
         sampled = output.sample(num_columns, axis=1).sample(num_rows, axis=0)
         return sampled.to_markdown()
 
     if isinstance(output, pd.Series):
+        # Similar truncation for series
         num_rows = min(pd.options.display.max_rows, output.shape[0])
         sampled = output.sample(num_rows)
         return sampled.to_markdown()
@@ -39,6 +45,10 @@ def repr_genai_pandas(output: Any) -> str:
 
 
 def repr_genai(output: Any) -> str:
+    '''Compute a GPT-3.5 friendly representation of the output of a cell.
+
+    For DataFrames and Series this means Markdown.
+    '''
     if not PANDAS_INSTALLED:
         return repr(output)
 
@@ -49,9 +59,11 @@ def repr_genai(output: Any) -> str:
 
 
 def craft_output_message(output: Any) -> Dict[str, str]:
+    """Craft a message from the output of an execution."""
     return craft_message(repr_genai(output), "system")
 
 
+# tokens to idenfify which cells to ignore based on the first line
 ignore_tokens = [
     "# genai:ignore",
     "#ignore",
@@ -68,7 +80,11 @@ ignore_tokens = [
 def get_historical_context(
     ipython: 'InteractiveShell', num_messages: int = 5, model: str = "gpt-3.5-turbo-0301"
 ) -> List[Dict[str, str]]:
+    """Create a series of messages to use as context for ChatGPT."""
     raw_inputs = ipython.history_manager.input_hist_raw
+
+    # Now filter out any inputs that start with our filters
+    # This has to keep the input index as the key for the output
     inputs = {}
     for i, input in enumerate(raw_inputs):
         if input is None or input.strip() == "":
@@ -81,6 +97,7 @@ def get_historical_context(
     indices = sorted(inputs.keys())
     context = []
 
+    # We will use the last `num_messages` inputs and outputs to establish context
     for index in indices[-num_messages:]:
         context.append(craft_user_message(inputs[index]))
 
