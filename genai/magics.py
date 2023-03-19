@@ -6,8 +6,9 @@ from IPython.core.magic_arguments import argument, magic_arguments, parse_argstr
 from IPython.display import display
 
 from genai.components import completion_made, starting_message
-from genai.context import get_historical_context
+from genai.context import build_context
 from genai.generate import generate_next_cell
+from genai.tokens import trim_messages_to_fit_token_limit
 
 
 @magic_arguments()
@@ -75,17 +76,25 @@ def assist(line, cell):
     ip = get_ipython()
     cell_text = cell.strip()
 
-    context = []
+    model = "gpt-3.5-turbo-0301"
+
+    messages = []
     if not args.fresh:
-        context = get_historical_context(ip)
+        # Start at 5 before the current execution to get the last 5 executions
+        start = max(ip.execution_count - 5, 1)
+        # Do not include the current execution
+        stop = ip.execution_count
+
+        context = build_context(ip.history_manager, start=start, stop=stop)
+        messages = trim_messages_to_fit_token_limit(context.messages, model=model)
 
     if args.verbose:
         print("magic arguments:", line)
         print("submission:", cell)
-        print("context:", context)
+        print("messages:", messages)
 
     # Pass streaming as False since we cannot replace after a `set_next_input`
-    generated_text = generate_next_cell(context, cell_text, stream=False)
+    generated_text = generate_next_cell(messages, cell_text, stream=False)
 
     progress.update(completion_made())
 
