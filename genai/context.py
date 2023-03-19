@@ -92,7 +92,7 @@ ignore_tokens = [
 def build_context(history_manager, start=1, stop=None):
     context = Context()
 
-    for (session, execution_counter, cell_text) in history_manager.get_range(
+    for session, execution_counter, cell_text in history_manager.get_range(
         session=0, start=start, stop=stop
     ):
         print('session', session)
