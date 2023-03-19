@@ -4,13 +4,12 @@ ChatGPT in order to help debug the code. It will also display the error in the
 notebook as usual.
 """
 
-from enum import Enum
 from traceback import TracebackException
 
 from IPython import get_ipython
-from IPython.core.display_functions import display
 
 from genai.generate import generate_exception_suggestion
+from genai.display import GenaiMarkdown, Stage
 
 
 def can_handle_display_updates():
@@ -34,30 +33,6 @@ def can_handle_display_updates():
     except ImportError:
         # No IPython, so no display updates whatsoever
         return False
-
-
-class Stage(str, Enum):
-    """The stage of feedback generation"""
-
-    STARTING = "starting"
-    GENERATING = "generating"
-    FINISHED = "finished"
-
-
-def GenaiMarkdown(text, stage=None):
-    return (
-        {
-            "text/markdown": text,
-            "text/plain": text,
-        },
-        {
-            "text/markdown": {
-                "genai": {
-                    "stage": stage,
-                }
-            }
-        },
-    )
 
 
 # this function will be called on exceptions in any cell
@@ -94,8 +69,8 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         else:
             code = None
 
-        data, metadata = GenaiMarkdown("Let's see how we can fix this... 🔧", stage=Stage.STARTING)
-        heading = display(data, metadata=metadata, raw=True, display_id=True)
+        gm = GenaiMarkdown("Let's see how we can fix this... 🔧", stage=Stage.STARTING)
+        gm.display()
 
         # Highly colorized tracebacks do not help GPT as much as a clean plaintext traceback.
         formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)
@@ -111,34 +86,19 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             stream=stream,
         )
 
-        content = ""
+        gm.stage = Stage.GENERATING
 
-        for delta in suggestion:
-            content += delta
-
-            data, metadata = GenaiMarkdown(f"## 💡 Suggestion\n\n{content}", stage=Stage.GENERATING)
-
-            heading.update(
-                data,
-                metadata=metadata,
-                raw=True,
-            )
-
-        data, metadata = GenaiMarkdown(f"## 💡 Suggestion\n\n{content}", stage=Stage.FINISHED)
-        heading.update(data, metadata=metadata, raw=True)
+        gm.message = "## 💡 Suggestion\n"
+        gm.consume(suggestion)
+        gm.stage = Stage.FINISHED
 
     except Exception as e:
         print("Error while trying to provide a suggestion: ", e)
     except KeyboardInterrupt:
-        # If we have the display heading, we can update it with empty text.
-        if "heading" in locals():
-            heading.update(
-                {
-                    "text/markdown": "",
-                    "text/plain": "",
-                },
-                raw=True,
-            )
+        # If we have our heading, replace it with empty text and take out any stage information
+        if "gm" in locals():
+            gm.message = " "
+            gm.stage = None
 
 
 def register(ipython=None):

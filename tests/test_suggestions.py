@@ -18,9 +18,6 @@ def test_register():
     autospec=True,
 )
 @mock.patch(
-    "IPython.core.display_functions.publish_display_data",
-)
-@mock.patch(
     "openai.ChatCompletion.create",
     return_value={
         "choices": [
@@ -34,7 +31,7 @@ def test_register():
     },
     autospec=True,
 )
-def test_custom_exc(create, publish_display_data, display, ip):
+def test_custom_exc(create, display, ip):
     try:
         raise Exception("this is just a test")
     except Exception:
@@ -73,8 +70,6 @@ def test_custom_exc(create, publish_display_data, display, ip):
     # display will be called *lots* of times
     # For some reason this is only those that are using display IDs
     display.assert_called()
-    # We also have to look at the publish_display_data calls
-    publish_display_data.assert_called()
 
     last_call = display.call_args_list[-1]
 
@@ -82,19 +77,14 @@ def test_custom_exc(create, publish_display_data, display, ip):
     args = last_call[0]
     kwargs = last_call[1]
 
-    # Now to check that we're publishing the correct data from the API
-    assert args[0] == {
-        "text/markdown": "## 💡 Suggestion\n\nHere's a suggestion",
-        "text/plain": "## 💡 Suggestion\n\nHere's a suggestion",
-    }
+    gm = args[0]
+
+    assert gm.message == "## 💡 Suggestion\nHere's a suggestion"
 
 
 @mock.patch(
     "IPython.core.display_functions.display",
     autospec=True,
-)
-@mock.patch(
-    "IPython.core.display_functions.publish_display_data",
 )
 @mock.patch(
     "openai.ChatCompletion.create",
@@ -110,7 +100,7 @@ def test_custom_exc(create, publish_display_data, display, ip):
     },
     autospec=True,
 )
-def test_custom_exc_fallback_on_In(create, publish_display_data, display, ip):
+def test_custom_exc_fallback_on_In(create, display, ip):
     try:
         raise Exception("this is just a test")
     except Exception:
@@ -148,8 +138,6 @@ def test_custom_exc_fallback_on_In(create, publish_display_data, display, ip):
     # display will be called *lots* of times
     # For some reason this is only those that are using display IDs
     display.assert_called()
-    # We also have to look at the publish_display_data calls
-    publish_display_data.assert_called()
 
     last_call = display.call_args_list[-1]
 
@@ -157,19 +145,14 @@ def test_custom_exc_fallback_on_In(create, publish_display_data, display, ip):
     args = last_call[0]
     kwargs = last_call[1]
 
-    # Now to check that we're publishing the correct data from the API
-    assert args[0] == {
-        "text/markdown": "## 💡 Suggestion\n\nHere's a suggestion",
-        "text/plain": "## 💡 Suggestion\n\nHere's a suggestion",
-    }
+    gm = args[0]
+
+    assert gm.message == "## 💡 Suggestion\nHere's a suggestion"
 
 
 @mock.patch(
     "IPython.core.display_functions.display",
     autospec=True,
-)
-@mock.patch(
-    "IPython.core.display_functions.publish_display_data",
 )
 @mock.patch(
     "openai.ChatCompletion.create",
@@ -185,7 +168,7 @@ def test_custom_exc_fallback_on_In(create, publish_display_data, display, ip):
     },
     autospec=True,
 )
-def test_custom_exc_long_traceback(create, publish_display_data, display, ip):
+def test_custom_exc_long_traceback(create, display, ip):
     try:
         raise Exception("a" * 2000)
     except Exception:
@@ -231,8 +214,6 @@ def test_custom_exc_long_traceback(create, publish_display_data, display, ip):
     # display will be called *lots* of times
     # For some reason this is only those that are using display IDs
     display.assert_called()
-    # We also have to look at the publish_display_data calls
-    publish_display_data.assert_called()
 
     last_call = display.call_args_list[-1]
 
@@ -240,11 +221,12 @@ def test_custom_exc_long_traceback(create, publish_display_data, display, ip):
     args = last_call[0]
     kwargs = last_call[1]
 
-    # Now to check that we're publishing the correct data from the API
-    assert args[0] == {
-        "text/markdown": "## 💡 Suggestion\n\nWhen you hear 'aaaaaa' you know it's the intro to a 90s Nickolodeon show about monsters.",
-        "text/plain": "## 💡 Suggestion\n\nWhen you hear 'aaaaaa' you know it's the intro to a 90s Nickolodeon show about monsters.",
-    }
+    gm = args[0]
+
+    assert (
+        gm.message
+        == "## 💡 Suggestion\nWhen you hear 'aaaaaa' you know it's the intro to a 90s Nickolodeon show about monsters."
+    )
 
 
 @mock.patch(
@@ -290,10 +272,7 @@ def test_custom_exc_error_inside(create, print, display, ip):
     "IPython.core.display_functions.display",
     autospec=True,
 )
-@mock.patch(
-    "IPython.core.display_functions.publish_display_data",
-)
-def test_pass_interrupts_through(publish_display_data, display, ip):
+def test_pass_interrupts_through(display, ip):
     ip.showtraceback = mock.MagicMock()
 
     try:
@@ -309,18 +288,13 @@ def test_pass_interrupts_through(publish_display_data, display, ip):
     # display will be called *lots* of times
     # For some reason this is only those that are using display IDs
     display.assert_not_called()
-    # We also have to look at the publish_display_data calls
-    publish_display_data.assert_not_called()
 
 
 @mock.patch(
     "IPython.core.display_functions.display",
     autospec=True,
 )
-@mock.patch(
-    "IPython.core.display_functions.publish_display_data",
-)
-def test_pass_system_exit_through(publish_display_data, display, ip):
+def test_pass_system_exit_through(display, ip):
     ip.showtraceback = mock.MagicMock()
 
     try:
@@ -336,8 +310,6 @@ def test_pass_system_exit_through(publish_display_data, display, ip):
     # display will be called *lots* of times
     # For some reason this is only those that are using display IDs
     display.assert_not_called()
-    # We also have to look at the publish_display_data calls
-    publish_display_data.assert_not_called()
 
 
 def fake_IPython(name):
