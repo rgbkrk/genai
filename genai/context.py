@@ -1,9 +1,7 @@
 """
 Creates user and system messages as context for ChatGPT, using the history of the current IPython session.
 """
-from typing import Any, Dict, List, Optional
-
-from IPython.core.interactiveshell import InteractiveShell
+from typing import Any, Dict, Optional
 
 try:
     import pandas as pd
