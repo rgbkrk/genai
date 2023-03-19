@@ -68,11 +68,14 @@ def generate_next_cell(
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
+            # Establish the context of the conversation
             {
                 "role": "system",
                 "content": NOTEBOOK_CREATE_NEXT_CELL_PROCLAMATION,
             },
+            # Presumably In, Out
             *context,
+            # The user's code or request
             {
                 "role": "user",
                 "content": text,
@@ -96,11 +99,13 @@ def generate_exception_suggestion(
 ) -> Iterator[str]:
     error_report = f"{etype.__name__}: {evalue}\n{plaintext_traceback}"
 
+    # Just in case, cap the error report
     if len(error_report) > 1024:
         error_report = error_report[:1024] + "\n..."
 
     messages = []
 
+    # Establish the role for ChatGPT
     messages.append(
         {
             "role": "system",
@@ -108,9 +113,11 @@ def generate_exception_suggestion(
         },
     )
 
+    # User executed code
     if code is not None:
         messages.append({"role": "user", "content": code})
 
+    # Code created an error in the system
     messages.append(
         {
             "role": "system",
