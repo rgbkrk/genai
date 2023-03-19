@@ -2,6 +2,7 @@
 Creates user and system messages as context for ChatGPT, using the history of the current IPython session.
 """
 from typing import Any, Dict, Optional
+from genai.display import GenaiMarkdown
 
 try:
     import pandas as pd
@@ -80,12 +81,12 @@ ignore_tokens = [
     "# genai:ignore",
     "#ignore",
     "# ignore",
-    "%%assist",
+    # "%%assist",
     "get_ipython",
     "%load_ext",
     "import genai",
     "%pip install",
-    "#%%assist",
+    # "#%%assist",
 ]
 
 
@@ -99,6 +100,10 @@ def build_context(history_manager, start=1, stop=None):
             continue
 
         context.append(cell_text, role="user", execution_count=execution_counter)
+        # Perform a lookup on GenaiMarkdown to see if there was a back-and-forth already
+        past_assist = GenaiMarkdown.assists.get(execution_counter, None)
+        if past_assist is not None:
+            context.append(past_assist.message, role="assistant", execution_count=execution_counter)
 
         output = history_manager.output_hist.get(execution_counter)
         if output is not None:

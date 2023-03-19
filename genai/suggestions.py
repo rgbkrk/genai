@@ -69,7 +69,11 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         else:
             code = None
 
-        gm = GenaiMarkdown("Let's see how we can fix this... 🔧", stage=Stage.STARTING)
+        gm = GenaiMarkdown(
+            "Let's see how we can fix this... 🔧",
+            stage=Stage.STARTING,
+            execution_count=execution_count,
+        )
         gm.display()
 
         # Highly colorized tracebacks do not help GPT as much as a clean plaintext traceback.

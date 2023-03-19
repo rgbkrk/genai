@@ -1,9 +1,8 @@
+from enum import Enum
 import os
 from binascii import hexlify
-from enum import Enum
-from typing import Any, Dict, Iterator, Optional, Tuple, Union
-
 from IPython.core import display_functions
+from typing import Any, Iterator, Union, Optional, Tuple, Dict
 
 
 class Stage(str, Enum):
@@ -47,10 +46,17 @@ class GenaiMarkdown:
         # Displays "Hello world! This is an update! 1 2 3" in the notebook
     """
 
-    def __init__(self, message: str = " ", stage: Optional[Stage] = None) -> None:
+    assists = {}
+
+    def __init__(
+        self, message: str = " ", stage: Optional[Stage] = None, execution_count=None
+    ) -> None:
         self._message: str = message
         self._display_id: str = hexlify(os.urandom(8)).decode('ascii')
         self._stage: Optional[Stage] = stage
+
+        if execution_count:
+            self.assists[execution_count] = self
 
     def append(self, delta: str) -> None:
         self.message += delta
