@@ -1,3 +1,5 @@
+from typing import Any, Dict, Iterator, List, TypedDict
+
 import openai
 
 NOTEBOOK_CREATE_NEXT_CELL_PROCLAMATION = """
@@ -16,11 +18,42 @@ Provide concise code examples in your response which will be rendered in Markdow
 """.strip()  # noqa: E501
 
 
-def content(completion):
+Completion = TypedDict(
+    "Completion",
+    {
+        "choices": List[Dict[str, Any]],
+    },
+)
+
+
+def content(completion: Completion):
     return completion["choices"][0]["message"]["content"]
 
 
-def deltas(completion):
+Delta = TypedDict(
+    "Delta",
+    {
+        "content": str,
+    },
+)
+
+
+StreamChoice = TypedDict(
+    "StreamChoice",
+    {
+        "delta": Delta,
+    },
+)
+
+StreamCompletion = TypedDict(
+    "StreamCompletion",
+    {
+        "choices": List[StreamChoice],
+    },
+)
+
+
+def deltas(completion: Iterator[StreamCompletion]) -> Iterator[str]:
     for chunk in completion:
         delta = chunk["choices"][0]["delta"]
         if "content" in delta:
@@ -28,21 +61,18 @@ def deltas(completion):
 
 
 def generate_next_cell(
-    context,  # List[Dict[str, str]]
-    text,
-    stream=False,
-):
+    context: List[Dict[str, str]],
+    text: str,
+    stream: bool = False,
+) -> Iterator[str]:
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
-            # Establish the context in which GPT will respond
             {
                 "role": "system",
                 "content": NOTEBOOK_CREATE_NEXT_CELL_PROCLAMATION,
             },
-            # In, Out
             *context,
-            # The user code/text
             {
                 "role": "user",
                 "content": text,
@@ -58,15 +88,12 @@ def generate_next_cell(
 
 
 def generate_exception_suggestion(
-    # The user's code
-    code,
-    # The exception with traceback
-    etype,
-    evalue,
-    plaintext_traceback,
-    stream=False,
-):
-    # Cap our error report at ~1024 characters
+    code: str,
+    etype: type,
+    evalue: BaseException,
+    plaintext_traceback: str,
+    stream: bool = False,
+) -> Iterator[str]:
     error_report = f"{etype.__name__}: {evalue}\n{plaintext_traceback}"
 
     if len(error_report) > 1024:
@@ -75,7 +102,6 @@ def generate_exception_suggestion(
     messages = []
 
     messages.append(
-        # Establish the context in which GPT will respond with role: assistant
         {
             "role": "system",
             "content": NOTEBOOK_ERROR_DIAGNOSER_PROCLAMATION,
@@ -83,13 +109,9 @@ def generate_exception_suggestion(
     )
 
     if code is not None:
-        messages.append(
-            # The user sent code
-            {"role": "user", "content": code}
-        )
+        messages.append({"role": "user", "content": code})
 
     messages.append(
-        # The system wrote back with the error
         {
             "role": "system",
             "content": error_report,

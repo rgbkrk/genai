@@ -46,3 +46,6 @@ jobs:
           pip install nox-poetry
       - name: Run lint
         run: nox -s lint
+      - name: Type checking
+        run: |
+          poetry run mypy genai/
