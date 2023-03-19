@@ -1,4 +1,4 @@
-from genai.tokens import num_tokens_from_messages, trim_messages_to_fit_token_limit, MAX_TOKENS
+from genai.tokens import MAX_TOKENS, num_tokens_from_messages, trim_messages_to_fit_token_limit
 
 
 def test_num_tokens_from_messages():

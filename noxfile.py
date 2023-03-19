@@ -41,7 +41,7 @@ def black_check(session: nox_poetry.Session):
 @nox_poetry.session(python="3.9")
 def isort_check(session: nox_poetry.Session):
     session.install("isort")
-    session.run("isort", "--diff", "--check", *LINT_PATHS)
+    session.run("isort", "--diff", "--profile", "black", "--check", *LINT_PATHS)
 
 
 @nox_poetry.session(python="3.9")
@@ -53,4 +53,4 @@ def blacken(session: nox_poetry.Session):
 @nox_poetry.session(python="3.9")
 def isort_apply(session: nox_poetry.Session):
     session.install("isort")
-    session.run("isort", *LINT_PATHS)
+    session.run("isort", *LINT_PATHS, "--profile", "black")
