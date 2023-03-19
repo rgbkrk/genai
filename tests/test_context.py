@@ -2,200 +2,100 @@ from unittest.mock import MagicMock, call, patch
 
 import pandas as pd
 
-from genai.context import get_historical_context, repr_genai, repr_genai_pandas
+from genai.context import build_context, repr_genai, repr_genai_pandas
+
+from genai.context import build_context
+
+import pandas as pd
+from genai.context import build_context
 
 
-class FakeOutput:
-    def __repr__(self):
-        return "<matplotlib.axes._subplots.AxesSubplot at 0x7f8b0c0f7a90>"
+def test_build_context_empty_history(ip):
+    # Test build_context with no history
+    context = build_context(ip.history_manager)
+
+    assert context.messages == []
 
 
-def test_get_historical_context(ip):
-    ip.history_manager.input_hist_raw = [
-        "import pandas as pd",
-        "df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})",
-        "df.plot.scatter(x='a', y='b')",
-    ]
+def test_build_context_single_input_output(ip):
+    # Test build_context with a single input and output
+    ip.run_cell("a = 1", store_history=True)
+    ip.run_cell("a + 1", store_history=True)
 
-    ip.history_manager.output_hist = {
-        2: FakeOutput(),
+    context = build_context(ip.history_manager)
+
+    assert len(context.messages) == 3
+    assert context.messages[0] == {"content": "a = 1", "role": "user"}
+    assert context.messages[1]["role"] == "user"
+    assert context.messages[1]["content"] == "a + 1"
+    assert context.messages[2]["role"] == "system"
+    assert context.messages[2]["content"].startswith("2")
+
+
+def test_build_context_ignore_tokens(ip):
+    # Test build_context ignoring inputs with specific tokens
+    ip.run_cell("#ignore\nimport time\ntime.sleep(0)", store_history=True)
+    ip.run_cell("a = 1", store_history=True)
+    context = build_context(ip.history_manager)
+
+    assert len(context.messages) == 1
+    assert context.messages[0] == {"content": "a = 1", "role": "user"}
+
+
+def test_build_context_start_stop(ip):
+    # Test build_context with start and stop parameters
+    ip.run_cell("a = 2", store_history=True)
+    ip.run_cell("a + 1", store_history=True)
+    ip.run_cell("a * 2", store_history=True)
+
+    context = build_context(ip.history_manager, start=2, stop=3)
+
+    assert len(context.messages) == 2
+    assert context.messages[0] == {"content": "a + 1", "role": "user"}
+    assert context.messages[1]["role"] == "system"
+    assert context.messages[1]["content"].startswith("3")
+
+
+def test_build_context_no_output(ip):
+    # Test build_context with input and no output
+    ip.run_cell("a = 1", store_history=True)
+    context = build_context(ip.history_manager)
+
+    assert len(context.messages) == 1
+    assert context.messages[0] == {"content": "a = 1", "role": "user"}
+
+
+def test_build_context_pandas_dataframe(ip):
+    # Test build_context with pandas DataFrame
+    ip.run_cell("import pandas as pd", store_history=True)
+    ip.run_cell("df = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})", store_history=True)
+    ip.run_cell("df", store_history=True)
+    context = build_context(ip.history_manager)
+
+    assert len(context.messages) == 4
+    assert context.messages[0] == {"content": "import pandas as pd", "role": "user"}
+    assert context.messages[1] == {
+        "content": "df = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})",
+        "role": "user",
     }
+    assert context.messages[2] == {"content": "df", "role": "user"}
 
-    context = get_historical_context(ip)
+    markdown_repr = context.messages[3]["content"]
+    assert context.messages[3]["role"] == "system"
 
-    assert context == [
-        {
-            "content": "import pandas as pd",
-            "role": "user",
-        },
-        {
-            "content": "df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})",
-            "role": "user",
-        },
-        {
-            "content": "df.plot.scatter(x='a', y='b')",
-            "role": "user",
-        },
-        {
-            "content": "<matplotlib.axes._subplots.AxesSubplot at 0x7f8b0c0f7a90>",
-            "role": "system",
-        },
-    ]
+    # We're sampling a two by two so we can just check the permutations
 
-
-def test_get_historical_context_with_ignore_tokens(ip):
-    ip.history_manager.input_hist_raw = [
-        "import pandas as pd",
-        """# genai:ignore
-print("This is code that should be ignored")
-        """,
-        "df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})",
-        "df.plot.scatter(x='a', y='b')",
-    ]
-    ip.history_manager.output_hist = {
-        3: FakeOutput(),
-    }
-
-    context = get_historical_context(ip)
-
-    assert context == [
-        {
-            "content": "import pandas as pd",
-            "role": "user",
-        },
-        {
-            "content": "df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})",
-            "role": "user",
-        },
-        {
-            "content": "df.plot.scatter(x='a', y='b')",
-            "role": "user",
-        },
-        {
-            "content": "<matplotlib.axes._subplots.AxesSubplot at 0x7f8b0c0f7a90>",
-            "role": "system",
-        },
-    ]
-
-
-def test_get_historical_context_with_ignore_tokens_and_empty_lines(ip):
-    ip.history_manager.input_hist_raw = [
-        "import pandas as pd",
-        """# genai:ignore
-print("This is code that should be ignored")
-        """,
-        "",
-        "df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})",
-        "df.plot.scatter(x='a', y='b')",
-    ]
-    ip.history_manager.output_hist = {
-        4: FakeOutput(),
-    }
-
-    context = get_historical_context(ip)
-
-    assert context == [
-        {
-            "content": "import pandas as pd",
-            "role": "user",
-        },
-        {
-            "content": "df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})",
-            "role": "user",
-        },
-        {
-            "content": "df.plot.scatter(x='a', y='b')",
-            "role": "user",
-        },
-        {
-            "content": "<matplotlib.axes._subplots.AxesSubplot at 0x7f8b0c0f7a90>",
-            "role": "system",
-        },
-    ]
-
-
-def test_get_historical_context_with_ignore_tokens_and_empty_lines_and_comments(ip):
-    ip.history_manager.input_hist_raw = [
-        "import pandas as pd",
-        """# genai:ignore
-print("This is code that should be ignored")
-        """,
-        "",
-        "# This is a comment",
-        "df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})",
-        "df.plot.scatter(x='a', y='b')",
-    ]
-    ip.history_manager.output_hist = {
-        5: FakeOutput(),
-    }
-
-    context = get_historical_context(ip)
-
-    assert context == [
-        {
-            "content": "import pandas as pd",
-            "role": "user",
-        },
-        {
-            "content": "# This is a comment",
-            "role": "user",
-        },
-        {
-            "content": "df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})",
-            "role": "user",
-        },
-        {
-            "content": "df.plot.scatter(x='a', y='b')",
-            "role": "user",
-        },
-        {
-            "content": "<matplotlib.axes._subplots.AxesSubplot at 0x7f8b0c0f7a90>",
-            "role": "system",
-        },
-    ]
-
-
-@patch("pandas.DataFrame.sample", return_value=pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}))
-def test_get_historical_context_pandas(sample, ip):
-    ip.history_manager.input_hist_raw = [
-        "import pandas as pd",
-        "df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})",
-        "df",
-    ]
-
-    with pd.option_context("display.max_rows", 10, "display.max_columns", 10):
-        ip.history_manager.output_hist = {
-            2: pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}),
-        }
-
-        context = get_historical_context(ip)
-
-    # First call should be on columns with axis=1
-    sample.assert_has_calls(
-        [
-            call(2, axis=1),
-            call(3, axis=0),
-        ]
-    )
-
-    assert context == [
-        {
-            "content": "import pandas as pd",
-            "role": "user",
-        },
-        {
-            "content": "df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})",
-            "role": "user",
-        },
-        {
-            "content": "df",
-            "role": "user",
-        },
-        {
-            "content": '|    |   a |   b |\n|---:|----:|----:|\n|  0 |   1 |   4 |\n|  1 |   2 |   5 |\n|  2 |   3 |   6 |',
-            "role": "system",
-        },
-    ]
+    if "|    |   A |   B |" in markdown_repr:
+        assert "|    |   A |   B |" in markdown_repr
+        assert "|---:|----:|----:|" in markdown_repr
+        # The rows may be in another order so we just check containment
+        assert "|  0 |   1 |   3 |" in markdown_repr
+        assert "|  1 |   2 |   4 |" in markdown_repr
+    else:
+        assert "|    |   B |   A |" in markdown_repr
+        assert "|---:|----:|----:|" in markdown_repr
+        assert "|  0 |   3 |   1 |" in markdown_repr
+        assert "|  1 |   4 |   2 |" in markdown_repr
 
 
 def test_repr_genai_pandas():

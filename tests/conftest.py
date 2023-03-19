@@ -9,6 +9,7 @@ def session_ip():
 
 @pytest.fixture(scope="function")
 def ip(session_ip):
+    session_ip.execution_count = 1
     session_ip.run_line_magic(magic_name="load_ext", line="genai")
     yield session_ip
     session_ip.run_line_magic(magic_name="unload_ext", line="genai")

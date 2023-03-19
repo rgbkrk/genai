@@ -21,6 +21,11 @@ def craft_user_message(code: str) -> Dict[str, str]:
     return craft_message(code, "user")
 
 
+def craft_output_message(output: Any) -> Dict[str, str]:
+    """Craft a message from the output of an execution."""
+    return craft_message(repr_genai(output), "system")
+
+
 class Context:
     def __init__(self):
         self._context = []
@@ -72,11 +77,6 @@ def repr_genai(output: Any) -> str:
         return repr_genai_pandas(output)
 
 
-def craft_output_message(output: Any) -> Dict[str, str]:
-    """Craft a message from the output of an execution."""
-    return craft_message(repr_genai(output), "system")
-
-
 # tokens to idenfify which cells to ignore based on the first line
 ignore_tokens = [
     "# genai:ignore",
@@ -94,17 +94,17 @@ ignore_tokens = [
 def build_context(history_manager, start=1, stop=None):
     context = Context()
 
-    for (_, execution_counter, cell_text) in history_manager.get_range(
+    for (session, execution_counter, cell_text) in history_manager.get_range(
         session=0, start=start, stop=stop
     ):
+        print('session', session)
         if any(cell_text.startswith(token) for token in ignore_tokens):
             continue
 
-        output = history_manager.output_hist.get(execution_counter)
-
         context.append(cell_text, role="user", execution_count=execution_counter)
 
+        output = history_manager.output_hist.get(execution_counter)
         if output is not None:
-            context.append(repr(output), role="system", execution_count=execution_counter)
+            context.append(repr_genai(output), role="system", execution_count=execution_counter)
 
     return context
