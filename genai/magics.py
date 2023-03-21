@@ -105,3 +105,5 @@ def assist(line, cell):
         print("messages:", messages)
 
     gm.consume(generate_next_cell(messages, cell_text, stream=True))
+
+    gm.stage = Stage.FINISHED

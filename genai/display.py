@@ -104,3 +104,4 @@ class GenaiMarkdown:
     @stage.setter
     def stage(self, stage: Stage) -> None:
         self._stage = stage
+        self.update_displays()

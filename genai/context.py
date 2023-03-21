@@ -79,14 +79,12 @@ def repr_genai(output: Any) -> str:
 # tokens to idenfify which cells to ignore based on the first line
 ignore_tokens = [
     "# genai:ignore",
+    "#genai:ignore",
     "#ignore",
     "# ignore",
-    # "%%assist",
     "get_ipython",
     "%load_ext",
-    "import genai",
     "%pip install",
-    # "#%%assist",
 ]
 
 
@@ -100,8 +98,10 @@ def build_context(history_manager, start=1, stop=None):
             continue
 
         context.append(cell_text, role="user", execution_count=execution_counter)
+
         # Perform a lookup on GenaiMarkdown to see if there was a back-and-forth already
         past_assist = GenaiMarkdown.assists.get(execution_counter, None)
+
         if past_assist is not None:
             context.append(past_assist.message, role="assistant", execution_count=execution_counter)
 
