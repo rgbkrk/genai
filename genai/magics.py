@@ -3,13 +3,11 @@
 from IPython import get_ipython
 from IPython.core.magic import cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
-from IPython.display import display
 
-from genai.components import completion_made, starting_message
 from genai.context import PastAssists, build_context
 from genai.generate import generate_next_cell
 from genai.tokens import trim_messages_to_fit_token_limit
-from genai.display import GenaiMarkdown, Stage
+from genai.display import GenaiMarkdown, Stage, can_handle_display_updates
 
 
 @magic_arguments()
@@ -89,6 +87,8 @@ def assist(line, cell):
 
     model = args.model
 
+    stream = can_handle_display_updates()
+
     messages = []
     if not args.fresh:
         # Start at 5 before the current execution to get the last 5 executions
@@ -104,6 +104,6 @@ def assist(line, cell):
         print("submission:", cell)
         print("messages:", messages)
 
-    gm.consume(generate_next_cell(messages, cell_text, stream=True))
+    gm.consume(generate_next_cell(messages, cell_text, stream=stream))
 
     gm.stage = Stage.FINISHED

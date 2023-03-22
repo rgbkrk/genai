@@ -5,6 +5,29 @@ from IPython.core import display_functions
 from typing import Any, Iterator, Union, Optional, Tuple, Dict
 
 
+def can_handle_display_updates():
+    """Determine (roughly) if the client can handle display updates."""
+    try:
+        from IPython import get_ipython
+
+        ipython = get_ipython()
+        if ipython is None:
+            return False
+
+        name = ipython.__class__.__name__
+
+        if name == "ZMQInteractiveShell":
+            return True
+        elif name == "TerminalInteractiveShell":
+            return False
+        else:
+            # Just assume they can otherwise
+            return True
+    except ImportError:
+        # No IPython, so no display updates whatsoever
+        return False
+
+
 class Stage(str, Enum):
     """The stage of feedback generation"""
 

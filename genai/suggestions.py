@@ -10,34 +10,11 @@ from typing import Type
 
 from IPython import get_ipython
 
-from genai.display import GenaiMarkdown, Stage
+from genai.display import GenaiMarkdown, Stage, can_handle_display_updates
 from genai.generate import generate_exception_suggestion
 from genai.context import PastAssists, PastErrors
 
 from IPython import InteractiveShell
-
-
-def can_handle_display_updates():
-    """Determine (roughly) if the client can handle display updates."""
-    try:
-        from IPython import get_ipython
-
-        ipython = get_ipython()
-        if ipython is None:
-            return False
-
-        name = ipython.__class__.__name__
-
-        if name == "ZMQInteractiveShell":
-            return True
-        elif name == "TerminalInteractiveShell":
-            return False
-        else:
-            # Just assume they can otherwise
-            return True
-    except ImportError:
-        # No IPython, so no display updates whatsoever
-        return False
 
 
 # this function will be called on exceptions in any cell
