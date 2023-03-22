@@ -1,6 +1,7 @@
 from unittest import mock
 
 from genai import generate
+from genai.context import PastAssists
 
 
 @mock.patch(
@@ -52,13 +53,12 @@ def test_assist_magic(create, ip):
     autospec=True,
 )
 def test_assist_magic_with_args(create, ip):
-    ip.set_next_input = mock.MagicMock()
-
     ip.run_cell_magic(
         magic_name="assist",
         line="--in-place --verbose",
         cell="create a scatterplot from df",
     )
+    execution_count = ip.execution_count
 
     # Check that create was called with the correct arguments
     create.assert_called_once_with(
@@ -76,10 +76,10 @@ def test_assist_magic_with_args(create, ip):
         stream=False,
     )
 
-    ip.set_next_input.assert_called_once_with(
-        "#%%assist --in-place --verbose\n# create a scatterplot from df\njust like code better",
-        replace=True,
-    )
+    # We can look at past assists to see what the assistant has suggested
+    assist = PastAssists.get(execution_count)
+
+    assert assist.message == "just like code better"
 
 
 @mock.patch(
@@ -97,8 +97,6 @@ def test_assist_magic_with_args(create, ip):
     autospec=True,
 )
 def test_assist_magic_with_fresh_arg(create, ip):
-    ip.set_next_input = mock.MagicMock()
-
     ip.run_cell_magic(
         magic_name="assist",
         line="--fresh",
@@ -121,7 +119,7 @@ def test_assist_magic_with_fresh_arg(create, ip):
         stream=False,
     )
 
-    ip.set_next_input.assert_called_once_with(
-        "superplot(df)",
-        replace=False,
-    )
+    # We can look at past assists to see what the assistant has suggested
+    assist = PastAssists.get(ip.execution_count)
+
+    assert assist.message == "superplot(df)"

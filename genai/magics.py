@@ -3,10 +3,9 @@
 from IPython import get_ipython
 from IPython.core.magic import cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
-from IPython.display import display
 
-from genai.components import completion_made, starting_message
-from genai.context import build_context
+from genai.context import PastAssists, build_context
+from genai.display import GenaiMarkdown, Stage, can_handle_display_updates
 from genai.generate import generate_next_cell
 from genai.tokens import trim_messages_to_fit_token_limit
 
@@ -74,14 +73,21 @@ def assist(line, cell):
     # how can I query for pokemon via the PokéAPI?
     ```
     """
-    progress = display(starting_message(), display_id=True)
+    ip = get_ipython()
 
     args = parse_argstring(assist, line)
 
-    ip = get_ipython()
+    gm = GenaiMarkdown(
+        stage=Stage.STARTING,
+    )
+    gm.display()
+    PastAssists.add(ip.execution_count, gm)
+
     cell_text = cell.strip()
 
     model = args.model
+
+    stream = can_handle_display_updates()
 
     messages = []
     if not args.fresh:
@@ -98,25 +104,6 @@ def assist(line, cell):
         print("submission:", cell)
         print("messages:", messages)
 
-    # Pass streaming as False since we cannot replace after a `set_next_input`
-    generated_text = generate_next_cell(messages, cell_text, stream=False)
+    gm.consume(generate_next_cell(messages, cell_text, stream=stream))
 
-    progress.update(completion_made())
-
-    preamble = ""
-
-    if args.in_place:
-        # Since we're running it in place, keep the context of what was sent in.
-        # The preamble is a comment with the magic line and the original cell text all commented out
-        processed_cell_text = "\n".join(f"# {line}" for line in cell_text.splitlines())
-        preamble = f"""#%%assist {line}\n{processed_cell_text}\n"""
-
-    new_cell = preamble
-
-    for delta in generated_text:
-        new_cell = new_cell + delta
-
-    ip.set_next_input(
-        new_cell,
-        replace=args.in_place,
-    )
+    gm.stage = Stage.FINISHED

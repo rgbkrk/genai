@@ -1,13 +1,34 @@
+from unittest import mock
 from unittest.mock import MagicMock, call, patch
 
 import pandas as pd
 
-from genai.context import build_context, repr_genai, repr_genai_pandas
+from genai.context import build_context, repr_genai, repr_genai_pandas, PastAssists, PastErrors
+from genai.display import GenaiMarkdown
 
-from genai.context import build_context
 
-import pandas as pd
-from genai.context import build_context
+def test_past_errors():
+    # Test adding and getting errors
+    PastErrors.add(1, ValueError, ValueError("Test error"), None)
+    error = PastErrors.get(1)
+    assert "Test error" in error
+    assert PastErrors.get(2) is None
+
+    # Test clearing errors
+    PastErrors.clear()
+    assert PastErrors.get(1) is None
+
+
+def test_past_assists():
+    # Test adding and getting assists
+    assist_md = GenaiMarkdown("Test assist")
+    PastAssists.add(1, assist_md)
+    assert PastAssists.get(1) == assist_md
+    assert PastAssists.get(2) is None
+
+    # Test clearing assists
+    PastAssists.clear()
+    assert PastAssists.get(1) is None
 
 
 def test_build_context_empty_history(ip):
@@ -96,6 +117,70 @@ def test_build_context_pandas_dataframe(ip):
         assert "|---:|----:|----:|" in markdown_repr
         assert "|  0 |   3 |   1 |" in markdown_repr
         assert "|  1 |   4 |   2 |" in markdown_repr
+
+
+@mock.patch(
+    "openai.ChatCompletion.create",
+    return_value={
+        "choices": [
+            {
+                "message": {
+                    "role": "assistant",
+                    "content": "superplot(df)",
+                },
+            },
+        ],
+    },
+    autospec=True,
+)
+def test_build_context_assistance(create, ip):
+    # Test build_context with assistance
+    ip.run_cell("a = 1", store_history=True)
+    ip.run_cell(
+        f"""%%assist
+
+Make the most dope plot ever    
+
+""".strip(),
+        store_history=True,
+    )
+    create.return_value = {
+        "choices": [
+            {
+                "message": {
+                    "role": "assistant",
+                    "content": "You should probably define b",
+                },
+            },
+        ],
+    }
+    ip.run_cell("a * b", store_history=True)
+
+    context = build_context(ip.history_manager)
+
+    assert len(context.messages) == 6
+    assert context.messages[0] == {"content": "a = 1", "role": "user"}
+    assert context.messages[1] == {
+        "content": "%%assist\n\nMake the most dope plot ever",
+        "role": "user",
+    }
+    assert context.messages[2] == {
+        "content": "superplot(df)",
+        "role": "assistant",
+    }
+    assert context.messages[3] == {
+        "content": "a * b",
+        "role": "user",
+    }
+
+    assert context.messages[4]["role"] == "system"
+    errorMessage = context.messages[4]["content"]
+    assert "NameError: name 'b' is not defined" in errorMessage
+
+    assert context.messages[5] == {
+        "role": "assistant",
+        "content": "## 💡 Suggestion\nYou should probably define b",
+    }
 
 
 def test_repr_genai_pandas():

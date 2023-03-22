@@ -5,38 +5,24 @@ notebook as usual.
 """
 
 from traceback import TracebackException
+from types import TracebackType
+from typing import Type
 
-from IPython import get_ipython
+from IPython import InteractiveShell, get_ipython
 
-from genai.display import GenaiMarkdown, Stage
+from genai.context import PastAssists, PastErrors
+from genai.display import GenaiMarkdown, Stage, can_handle_display_updates
 from genai.generate import generate_exception_suggestion
 
 
-def can_handle_display_updates():
-    """Determine (roughly) if the client can handle display updates."""
-    try:
-        from IPython import get_ipython
-
-        ipython = get_ipython()
-        if ipython is None:
-            return False
-
-        name = ipython.__class__.__name__
-
-        if name == "ZMQInteractiveShell":
-            return True
-        elif name == "TerminalInteractiveShell":
-            return False
-        else:
-            # Just assume they can otherwise
-            return True
-    except ImportError:
-        # No IPython, so no display updates whatsoever
-        return False
-
-
 # this function will be called on exceptions in any cell
-def custom_exc(shell, etype, evalue, tb, tb_offset=None):
+def custom_exc(
+    shell: "InteractiveShell",
+    etype: Type[BaseException],
+    evalue: BaseException,
+    tb: TracebackType,
+    tb_offset=None,
+):
     # still show the error within the notebook, don't just swallow it
     shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
 
@@ -69,12 +55,19 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         else:
             code = None
 
-        gm = GenaiMarkdown("Let's see how we can fix this... 🔧", stage=Stage.STARTING)
+        gm = GenaiMarkdown(
+            "Let's see how we can fix this... 🔧",
+            stage=Stage.STARTING,
+        )
         gm.display()
 
         # Highly colorized tracebacks do not help GPT as much as a clean plaintext traceback.
-        formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)
+        formatted = TracebackException(etype, evalue, tb, limit=3).format(chain=True)
         plaintext_traceback = "\n".join(formatted)
+
+        # Track context for future suggestions
+        PastErrors.add(execution_count, etype, evalue, tb)
+        PastAssists.add(execution_count, gm)
 
         stream = can_handle_display_updates()
 

@@ -6,6 +6,29 @@ from typing import Any, Dict, Iterator, Optional, Tuple, Union
 from IPython.core import display_functions
 
 
+def can_handle_display_updates():
+    """Determine (roughly) if the client can handle display updates."""
+    try:
+        from IPython import get_ipython
+
+        ipython = get_ipython()
+        if ipython is None:
+            return False
+
+        name = ipython.__class__.__name__
+
+        if name == "ZMQInteractiveShell":
+            return True
+        elif name == "TerminalInteractiveShell":
+            return False
+        else:
+            # Just assume they can otherwise
+            return True
+    except ImportError:
+        # No IPython, so no display updates whatsoever
+        return False
+
+
 class Stage(str, Enum):
     """The stage of feedback generation"""
 
@@ -47,7 +70,7 @@ class GenaiMarkdown:
         # Displays "Hello world! This is an update! 1 2 3" in the notebook
     """
 
-    def __init__(self, message: str = " ", stage: Optional[Stage] = None) -> None:
+    def __init__(self, message: str = "", stage: Optional[Stage] = None) -> None:
         self._message: str = message
         self._display_id: str = hexlify(os.urandom(8)).decode('ascii')
         self._stage: Optional[Stage] = stage
@@ -98,3 +121,4 @@ class GenaiMarkdown:
     @stage.setter
     def stage(self, stage: Stage) -> None:
         self._stage = stage
+        self.update_displays()
