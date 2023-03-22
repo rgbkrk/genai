@@ -8,13 +8,11 @@ from traceback import TracebackException
 from types import TracebackType
 from typing import Type
 
-from IPython import get_ipython
+from IPython import InteractiveShell, get_ipython
 
+from genai.context import PastAssists, PastErrors
 from genai.display import GenaiMarkdown, Stage, can_handle_display_updates
 from genai.generate import generate_exception_suggestion
-from genai.context import PastAssists, PastErrors
-
-from IPython import InteractiveShell
 
 
 # this function will be called on exceptions in any cell

@@ -5,9 +5,9 @@ from IPython.core.magic import cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
 from genai.context import PastAssists, build_context
+from genai.display import GenaiMarkdown, Stage, can_handle_display_updates
 from genai.generate import generate_next_cell
 from genai.tokens import trim_messages_to_fit_token_limit
-from genai.display import GenaiMarkdown, Stage, can_handle_display_updates
 
 
 @magic_arguments()

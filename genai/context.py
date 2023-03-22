@@ -4,6 +4,7 @@ Creates user and system messages as context for ChatGPT, using the history of th
 from traceback import TracebackException
 from types import TracebackType
 from typing import Any, Dict, Optional, Type, Union
+
 from genai.display import GenaiMarkdown
 
 try:

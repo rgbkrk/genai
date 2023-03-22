@@ -1,8 +1,9 @@
-from enum import Enum
 import os
 from binascii import hexlify
+from enum import Enum
+from typing import Any, Dict, Iterator, Optional, Tuple, Union
+
 from IPython.core import display_functions
-from typing import Any, Iterator, Union, Optional, Tuple, Dict
 
 
 def can_handle_display_updates():
