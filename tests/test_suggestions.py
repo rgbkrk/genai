@@ -2,6 +2,7 @@ import sys
 from unittest import mock
 
 from genai import generate, suggestions
+from genai.context import PastErrors
 from genai.suggestions import can_handle_display_updates
 
 
@@ -79,6 +80,11 @@ def test_custom_exc(create, display, ip):
     gm = args[0]
 
     assert gm.message == "## 💡 Suggestion\nHere's a suggestion"
+
+    past_error = PastErrors.get(ip.execution_count)
+
+    assert past_error.startswith("Traceback (most recent call last):")
+    assert "Exception: this is just a test" in past_error
 
 
 @mock.patch(

@@ -2,12 +2,32 @@ from unittest.mock import MagicMock, call, patch
 
 import pandas as pd
 
-from genai.context import build_context, repr_genai, repr_genai_pandas
+from genai.context import build_context, repr_genai, repr_genai_pandas, PastAssists, PastErrors
+from genai.display import GenaiMarkdown
 
-from genai.context import build_context
 
-import pandas as pd
-from genai.context import build_context
+def test_past_errors():
+    # Test adding and getting errors
+    PastErrors.add(1, ValueError, ValueError("Test error"), None)
+    error = PastErrors.get(1)
+    assert "Test error" in error
+    assert PastErrors.get(2) is None
+
+    # Test clearing errors
+    PastErrors.clear()
+    assert PastErrors.get(1) is None
+
+
+def test_past_assists():
+    # Test adding and getting assists
+    assist_md = GenaiMarkdown("Test assist")
+    PastAssists.add(1, assist_md)
+    assert PastAssists.get(1) == assist_md
+    assert PastAssists.get(2) is None
+
+    # Test clearing assists
+    PastAssists.clear()
+    assert PastAssists.get(1) is None
 
 
 def test_build_context_empty_history(ip):
