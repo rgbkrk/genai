@@ -9,7 +9,7 @@ from genai.display import GenaiMarkdown, Stage
 def test_genai_markdown_init_default(ip):
     markdown = GenaiMarkdown()
 
-    assert markdown.message == " "
+    assert markdown.message == ""
     assert markdown.stage is None
 
 

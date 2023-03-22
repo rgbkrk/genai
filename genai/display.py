@@ -69,7 +69,7 @@ class GenaiMarkdown:
         # Displays "Hello world! This is an update! 1 2 3" in the notebook
     """
 
-    def __init__(self, message: str = " ", stage: Optional[Stage] = None) -> None:
+    def __init__(self, message: str = "", stage: Optional[Stage] = None) -> None:
         self._message: str = message
         self._display_id: str = hexlify(os.urandom(8)).decode('ascii')
         self._stage: Optional[Stage] = stage
