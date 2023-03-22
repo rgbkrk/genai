@@ -1,3 +1,4 @@
+from unittest import mock
 from unittest.mock import MagicMock, call, patch
 
 import pandas as pd
@@ -116,6 +117,70 @@ def test_build_context_pandas_dataframe(ip):
         assert "|---:|----:|----:|" in markdown_repr
         assert "|  0 |   3 |   1 |" in markdown_repr
         assert "|  1 |   4 |   2 |" in markdown_repr
+
+
+@mock.patch(
+    "openai.ChatCompletion.create",
+    return_value={
+        "choices": [
+            {
+                "message": {
+                    "role": "assistant",
+                    "content": "superplot(df)",
+                },
+            },
+        ],
+    },
+    autospec=True,
+)
+def test_build_context_assistance(create, ip):
+    # Test build_context with assistance
+    ip.run_cell("a = 1", store_history=True)
+    ip.run_cell(
+        f"""%%assist
+
+Make the most dope plot ever    
+
+""".strip(),
+        store_history=True,
+    )
+    create.return_value = {
+        "choices": [
+            {
+                "message": {
+                    "role": "assistant",
+                    "content": "You should probably define b",
+                },
+            },
+        ],
+    }
+    ip.run_cell("a * b", store_history=True)
+
+    context = build_context(ip.history_manager)
+
+    assert len(context.messages) == 6
+    assert context.messages[0] == {"content": "a = 1", "role": "user"}
+    assert context.messages[1] == {
+        "content": "%%assist\n\nMake the most dope plot ever",
+        "role": "user",
+    }
+    assert context.messages[2] == {
+        "content": "superplot(df)",
+        "role": "assistant",
+    }
+    assert context.messages[3] == {
+        "content": "a * b",
+        "role": "user",
+    }
+
+    assert context.messages[4]["role"] == "system"
+    errorMessage = context.messages[4]["content"]
+    assert "NameError: name 'b' is not defined" in errorMessage
+
+    assert context.messages[5] == {
+        "role": "assistant",
+        "content": "## 💡 Suggestion\nYou should probably define b",
+    }
 
 
 def test_repr_genai_pandas():
