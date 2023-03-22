@@ -5,11 +5,16 @@ notebook as usual.
 """
 
 from traceback import TracebackException
+from types import TracebackType
+from typing import Type
 
 from IPython import get_ipython
 
 from genai.display import GenaiMarkdown, Stage
 from genai.generate import generate_exception_suggestion
+from genai.context import PastAssists, PastErrors
+
+from IPython import InteractiveShell
 
 
 def can_handle_display_updates():
@@ -36,7 +41,13 @@ def can_handle_display_updates():
 
 
 # this function will be called on exceptions in any cell
-def custom_exc(shell, etype, evalue, tb, tb_offset=None):
+def custom_exc(
+    shell: "InteractiveShell",
+    etype: Type[BaseException],
+    evalue: BaseException,
+    tb: TracebackType,
+    tb_offset=None,
+):
     # still show the error within the notebook, don't just swallow it
     shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
 
@@ -72,13 +83,16 @@ def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         gm = GenaiMarkdown(
             "Let's see how we can fix this... 🔧",
             stage=Stage.STARTING,
-            execution_count=execution_count,
         )
         gm.display()
 
         # Highly colorized tracebacks do not help GPT as much as a clean plaintext traceback.
-        formatted = TracebackException(etype, evalue, tb, limit=20).format(chain=True)
+        formatted = TracebackException(etype, evalue, tb, limit=3).format(chain=True)
         plaintext_traceback = "\n".join(formatted)
+
+        # Track context for future suggestions
+        PastErrors.add(execution_count, etype, evalue, tb)
+        PastAssists.add(execution_count, gm)
 
         stream = can_handle_display_updates()
 

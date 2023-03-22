@@ -6,7 +6,7 @@ from IPython.core.magic_arguments import argument, magic_arguments, parse_argstr
 from IPython.display import display
 
 from genai.components import completion_made, starting_message
-from genai.context import build_context
+from genai.context import PastAssists, build_context
 from genai.generate import generate_next_cell
 from genai.tokens import trim_messages_to_fit_token_limit
 from genai.display import GenaiMarkdown, Stage
@@ -81,9 +81,9 @@ def assist(line, cell):
 
     gm = GenaiMarkdown(
         stage=Stage.STARTING,
-        execution_count=ip.execution_count,
     )
     gm.display()
+    PastAssists.add(ip.execution_count, gm)
 
     cell_text = cell.strip()
 

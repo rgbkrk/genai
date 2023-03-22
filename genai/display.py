@@ -46,17 +46,10 @@ class GenaiMarkdown:
         # Displays "Hello world! This is an update! 1 2 3" in the notebook
     """
 
-    assists = {}
-
-    def __init__(
-        self, message: str = " ", stage: Optional[Stage] = None, execution_count=None
-    ) -> None:
+    def __init__(self, message: str = " ", stage: Optional[Stage] = None) -> None:
         self._message: str = message
         self._display_id: str = hexlify(os.urandom(8)).decode('ascii')
         self._stage: Optional[Stage] = stage
-
-        if execution_count:
-            self.assists[execution_count] = self
 
     def append(self, delta: str) -> None:
         self.message += delta

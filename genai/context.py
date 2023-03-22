@@ -1,7 +1,9 @@
 """
 Creates user and system messages as context for ChatGPT, using the history of the current IPython session.
 """
-from typing import Any, Dict, Optional
+from traceback import TracebackException
+from types import TracebackType
+from typing import Any, Dict, Optional, Type, Union
 from genai.display import GenaiMarkdown
 
 try:
@@ -23,22 +25,6 @@ def craft_user_message(code: str) -> Dict[str, str]:
 def craft_output_message(output: Any) -> Dict[str, str]:
     """Craft a message from the output of an execution."""
     return craft_message(repr_genai(output), "system")
-
-
-class Context:
-    def __init__(self):
-        self._context = []
-
-    def append(self, text: str, execution_count: Optional[int] = None, role: str = "user"):
-        contextual_message = {
-            "message": craft_message(text, role=role),
-            "execution_count": execution_count,
-        }
-        self._context.append(contextual_message)
-
-    @property
-    def messages(self):
-        return [message["message"] for message in self._context]
 
 
 def repr_genai_pandas(output: Any) -> str:
@@ -88,6 +74,69 @@ ignore_tokens = [
 ]
 
 
+class PastErrors:
+    """Tracks previous errors in the session"""
+
+    errors: Dict[str, str] = {}
+
+    @classmethod
+    def add(
+        cls,
+        execution_count: int,
+        etype: Type[BaseException],
+        evalue: BaseException,
+        tb: TracebackType,
+    ):
+        condensed_error = "\n".join(
+            TracebackException(etype, evalue, tb, limit=2).format(chain=True)
+        )
+        cls.errors[str(execution_count)] = condensed_error
+
+    @classmethod
+    def clear(cls):
+        cls.errors = {}
+
+    @classmethod
+    def get(cls, execution_count: Union[int, str]) -> Optional[str]:
+        return cls.errors.get(str(execution_count))
+
+
+class PastAssists:
+    """Tracks previous assists in the session"""
+
+    assists: Dict[str, GenaiMarkdown] = {}
+
+    @classmethod
+    def add(cls, execution_count: int, assist: GenaiMarkdown):
+        cls.assists[str(execution_count)] = assist
+
+    @classmethod
+    def clear(cls):
+        cls.assists = {}
+
+    @classmethod
+    def get(cls, execution_count: Union[int, str]) -> Optional[GenaiMarkdown]:
+        return cls.assists.get(str(execution_count))
+
+
+class Context:
+    '''Utility class to build the context for ChatGPT from an IPython session'''
+
+    def __init__(self):
+        self._context = []
+
+    def append(self, text: str, execution_count: Optional[int] = None, role: str = "user"):
+        contextual_message = {
+            "message": craft_message(text, role=role),
+            "execution_count": execution_count,
+        }
+        self._context.append(contextual_message)
+
+    @property
+    def messages(self):
+        return [message["message"] for message in self._context]
+
+
 def build_context(history_manager, start=1, stop=None):
     context = Context()
 
@@ -97,14 +146,20 @@ def build_context(history_manager, start=1, stop=None):
         if any(cell_text.startswith(token) for token in ignore_tokens):
             continue
 
+        # User Code `In[*]:`
         context.append(cell_text, role="user", execution_count=execution_counter)
 
-        # Perform a lookup on GenaiMarkdown to see if there was a back-and-forth already
-        past_assist = GenaiMarkdown.assists.get(execution_counter, None)
+        # System Error Output
+        past_error = PastErrors.get(execution_counter)
+        if past_error is not None:
+            context.append(past_error, role="system", execution_count=execution_counter)
 
+        # Assistant Output
+        past_assist = PastAssists.get(execution_counter)
         if past_assist is not None:
             context.append(past_assist.message, role="assistant", execution_count=execution_counter)
 
+        # System Outputs `Out[*]:`
         output = history_manager.output_hist.get(execution_counter)
         if output is not None:
             context.append(repr_genai(output), role="system", execution_count=execution_counter)
