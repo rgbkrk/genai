@@ -18,33 +18,66 @@ from genai.tokens import trim_messages_to_fit_token_limit
     help="Show additional information in the cell output",
 )
 @argument(
-    "--in-place",
-    action="store_true",
-    help="Replace the current cell with the generated code",
-)
-@argument(
     "--model",
     default="gpt-3.5-turbo-0301",
     help="the model to use",
 )
 @cell_magic
 def assist(line, cell):
-    """Generate code cells for notebooks using OpenAI's API.
+    """Get help based on the current notebook session. Outputs markdown.
+
+    `genai`'s `assist` magic asks ChatGPT to respond based on:
+
+    * Your previous code `In[*]`
+    * The output of your previous code `Out[*]`
+    * Past exceptions
+    * Past `genai` suggestions
 
     Usage:
 
+    # Cell 1
+
+    ```python
+    import pandas as pd
+    # Berkeley Restaurant Inspections Data
+    df = pd.read_json("https://data.cityofberkeley.info/resource/iuea-7eac.json")
+    df
+    ```
+
+    # Cell 2
+
     ```python
     %%assist
-    # create a scatterplot from df
+
+    Let's plot the number of restaurants inspected per day.
     ```
 
-    Will create a code cell below the current one looking something like this
+    Will output markdown like this:
+
+    ``````markdown
+    Sure! First we'll need to make sure the `inspection_date` column in your DataFrame
+    is in a datetime format. You can do this with the `pd.to_datetime()` method. Then
+    we can group the data by day and count the number of unique restaurants inspected
+    each day. This can be achieved using the `groupby()` and `nunique()` methods,
+    respectively. Finally, we can plot the results using `plot()` with the `bar` style.
+    Here's some code to get you started:
 
     ```python
-    # create a scatterplot from df
+    import matplotlib.pyplot as plt
 
-    df.plot.scatter(x="col1", y="col2")
+    # Convert inspection_date to datetime format
+    df['inspection_date'] = pd.to_datetime(df['inspection_date'])
+
+    # Group by day and count number of unique restaurants
+    daily_count = df.groupby(df['inspection_date'].dt.date)['doing_business_as'].nunique()
+
+    # Plot the results as a bar chart
+    daily_count.plot(kind='bar')
+    plt.show()
     ```
+
+    Give this a try and let me know if you have any questions!
+    ``````
 
     If you've run previous cells in the notebook, the generated code will be
     based on the history of the current notebook session.
@@ -62,14 +95,12 @@ def assist(line, cell):
 
     --fresh: Ignore the history of the current notebook session and generate code from scratch.
 
-    --in-place: Replace the current cell with the generated code.
-
     --verbose: Show additional information in the cell output.
 
     Example:
 
     ```python
-    %%assist --fresh --in-place --verbose
+    %%assist --fresh --verbose
     # how can I query for pokemon via the PokéAPI?
     ```
     """
