@@ -30,7 +30,7 @@ def create_gpt_magic(magic_name, prompt, generate_context=None, model="gpt-3.5-t
 
         # Create the response from ChatCompletion
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model=model,
             messages=[
                 # Establish the context of the conversation
                 {
