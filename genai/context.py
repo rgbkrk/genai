@@ -72,6 +72,7 @@ ignore_tokens = [
     "get_ipython",
     "%load_ext",
     "%pip install",
+    "%%prompt",
 ]
 
 
