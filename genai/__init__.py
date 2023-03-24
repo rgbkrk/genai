@@ -13,9 +13,10 @@
 
 def load_ipython_extension(ipython):
     import genai.suggestions
-    from genai.magics import assist
+    from genai.magics import assist, prompt
 
     ipython.register_magic_function(assist, "cell")
+    ipython.register_magic_function(prompt, "cell")
 
     genai.suggestions.register()
 

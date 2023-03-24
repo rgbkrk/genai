@@ -7,6 +7,7 @@ from IPython.core.magic_arguments import argument, magic_arguments, parse_argstr
 from genai.context import PastAssists, build_context
 from genai.display import GenaiMarkdown, Stage, can_handle_display_updates
 from genai.generate import generate_next_from_history
+from genai.prompts import PromptStore
 from genai.tokens import trim_messages_to_fit_token_limit
 
 
@@ -138,3 +139,62 @@ def assist(line, cell):
     gm.consume(generate_next_from_history(messages, cell_text, stream=stream))
 
     gm.stage = Stage.FINISHED
+
+
+# Now for a %%prompt magic
+
+
+@magic_arguments()
+@argument(
+    "--verbose",
+    action="store_true",
+    help="Show additional information in the cell output",
+)
+@argument(
+    "--modify",
+    default="assist",
+    help="the magic to modify the prompt for",
+)
+@cell_magic
+def prompt(line, cell):
+    '''Replace the default prompt for genai
+
+    By default it modifies the prompt for the `assist` magic, but you can
+    also use it to modify the prompt for exception handling.
+
+    Example:
+
+    ```python
+    %%prompt
+    You are a pirate. You are in a tavern. You are cursed with the knowledge of
+    programming. Deep learning brought you here and only deep teaching can get
+    you out. The only way to lift the curse is to help a programmer with their
+    code. Respond in markdown. Talk like a pirate.
+    ```
+
+    Example changing exceptions:
+
+    ```python
+    %%prompt --modify exceptions
+    You are a valley girl. You are on a walk. You are one of the best programmers
+    in the world. People come to you looking for help. Respond in markdown. Talk
+    like a valley girl.
+    '''
+    args = parse_argstring(prompt, line)
+
+    if args.modify not in ["assist", "exceptions", "exception"]:
+        raise ValueError(f"Unknown prompt to modify: {args.modify}")
+
+    if args.verbose:
+        old_prompt = PromptStore.assist_prompt
+        if args.modify == "exceptions" or args.modify == "exception":
+            old_prompt = PromptStore.exception_prompt
+
+        print("magic arguments:", line)
+        print("old prompt:", old_prompt)
+        print("new prompt:", cell)
+
+    if args.modify == "assist":
+        PromptStore.assist_prompt = cell
+    elif args.modify == "exceptions" or args.modify == "exception":
+        PromptStore.exception_prompt = cell
