@@ -55,7 +55,7 @@ def test_assist_magic(create, ip):
 def test_assist_magic_with_args(create, ip):
     ip.run_cell_magic(
         magic_name="assist",
-        line="--in-place --verbose",
+        line="--verbose",
         cell="create a scatterplot from df",
     )
     execution_count = ip.execution_count
