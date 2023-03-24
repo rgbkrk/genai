@@ -1,9 +1,10 @@
 import sys
 from unittest import mock
 
-from genai import generate, suggestions
+from genai import suggestions
 from genai.context import PastErrors
 from genai.suggestions import can_handle_display_updates
+from genai.prompts import PromptStore
 
 
 def test_register():
@@ -58,7 +59,7 @@ def test_custom_exc(create, display, ip):
     assert len(kwargs["messages"]) == 3
     assert kwargs["messages"][0] == {
         "role": "system",
-        "content": generate.NOTEBOOK_ERROR_DIAGNOSER_PROCLAMATION,
+        "content": PromptStore.exception_prompt,
     }
     assert kwargs["messages"][1] == {
         "role": "user",
@@ -131,7 +132,7 @@ def test_custom_exc_fallback_on_In(create, display, ip):
     assert len(kwargs["messages"]) == 3
     assert kwargs["messages"][0] == {
         "role": "system",
-        "content": generate.NOTEBOOK_ERROR_DIAGNOSER_PROCLAMATION,
+        "content": PromptStore.exception_prompt,
     }
     assert kwargs["messages"][1] == {
         "role": "user",
@@ -201,7 +202,7 @@ def test_custom_exc_long_traceback(create, display, ip):
     assert len(kwargs["messages"]) == 3
     assert kwargs["messages"][0] == {
         "role": "system",
-        "content": generate.NOTEBOOK_ERROR_DIAGNOSER_PROCLAMATION,
+        "content": PromptStore.exception_prompt,
     }
     assert kwargs["messages"][1] == {
         "role": "user",

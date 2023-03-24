@@ -1,6 +1,6 @@
 from unittest import mock
 
-from genai import generate
+from genai.prompts import PromptStore
 from genai.context import PastAssists
 
 
@@ -27,7 +27,7 @@ def test_assist_magic(create, ip):
         messages=[
             {
                 "role": "system",
-                "content": generate.NOTEBOOK_CREATE_NEXT_CELL_PROCLAMATION,
+                "content": PromptStore.assist_prompt,
             },
             {
                 "role": "user",
@@ -66,7 +66,7 @@ def test_assist_magic_with_args(create, ip):
         messages=[
             {
                 "role": "system",
-                "content": generate.NOTEBOOK_CREATE_NEXT_CELL_PROCLAMATION,
+                "content": PromptStore.assist_prompt,
             },
             {
                 "role": "user",
@@ -108,7 +108,7 @@ def test_assist_magic_with_fresh_arg(create, ip):
         messages=[
             {
                 "role": "system",
-                "content": generate.NOTEBOOK_CREATE_NEXT_CELL_PROCLAMATION,
+                "content": PromptStore.assist_prompt,
             },
             # Note that there is zero other context, due to running with --fresh
             {
