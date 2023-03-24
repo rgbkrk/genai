@@ -91,11 +91,19 @@ class GenaiMarkdown:
         display_functions.display(self, display_id=self._display_id, update=True)
 
     def __repr__(self) -> str:
-        return self._message
+        message = self._message
+        if message is None or message == "":
+            message = " "
+        return message
 
     def _repr_markdown_(self) -> Union[str, Tuple[str, Dict[str, Any]]]:
+        message = self._message
+        # Handle some platforms that don't support empty Markdown
+        if message is None or message == "":
+            message = " "
+
         if self._stage is None:
-            return self._message
+            return message
 
         metadata = {
             "genai": {
@@ -103,7 +111,7 @@ class GenaiMarkdown:
             }
         }
 
-        return self._message, metadata
+        return message, metadata
 
     @property
     def message(self) -> str:
