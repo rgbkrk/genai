@@ -24,7 +24,7 @@ TL;DR Get started now
 
 ## Introduction
 
-We've taken the context from IPython, mixed it with OpenAI's Large Language Models, and given you the power to generate code cells and get recommendations after exceptions in all Jupyter environments, including IPython, JupyterLab, Jupyter Notebook, and Noteable.
+We've taken the context from IPython, mixed it with OpenAI's Large Language Models, and are bringing you a more informed notebook experience that works in all Jupyter environments, including IPython, JupyterLab, Jupyter Notebook, and Noteable. 🦾🌏
 
 <!-- --8<-- [end:intro] -->
 
