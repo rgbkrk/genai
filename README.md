@@ -2,9 +2,11 @@
 
 # GenAI: generative AI tooling for IPython
 
-Generate code cells and get recommendations after exceptions in all Jupyter environments, including IPython, JupyterLab, Jupyter Notebook, and Noteable.
+🦾 Get GPT help with code, SQL queries, DataFrames, Exceptions and more in IPython.
 
-TL;DR
+🌍 Supports all Jupyter environments, including IPython, JupyterLab, Jupyter Notebook, and Noteable.
+
+TL;DR Get started now
 
 ```
 %pip install genai
@@ -120,40 +122,39 @@ In this example, the `by` argument is set to `'Age'`, which sorts the dataframe 
 
 ## Example
 
-```python
+````python
 In [1]: %load_ext genai
 
 In [2]: %%assist
    ...:
-   ...: # Pull census data
+   ...: Can you explain this query to me so I can be sure we're doing the right things?
    ...:
-'What would a data analyst do? 🤔'
+   ...: ```sql
+   ...: SELECT
+   ...:   COUNT(*) AS num_downloads,
+   ...:   DATE_TRUNC(DATE(timestamp), DAY) AS day
+   ...: FROM `bigquery-public-data.pypi.file_downloads`
+   ...: WHERE
+   ...:   file.project = 'genai'
+   ...:   -- Only query the last 6 months of history
+   ...:   AND DATE(timestamp)
+   ...:     BETWEEN DATE_TRUNC(DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH), MONTH)
+   ...:     AND CURRENT_DATE()
+   ...: GROUP BY day
+   ...: ORDER BY day DESC
+````
 
-In [3]: # generated with %%assist
-   ...: # Pull census data
-   ...: # To pull census data we can use the `requests` library to send a GET request to the appropriate API endpoint.
-   ...: # First, import the requests module
-   ...: import requests
-   ...:
-   ...: # Define the URL endpoint to the Census API
-   ...: url = "https://api.census.gov/data/2019/pep/population"
-   ...:
-   ...: # Define the parameters needed for the API request, such as dataset and variables requested
-   ...: params = {
-   ...:     "get": "POP",
-   ...:     "for": "state:*",
-   ...: }
-   ...:
-   ...: # Send a GET request to the Census API endpoint with the parameters
-   ...: response = requests.get(url, params=params)
-   ...:
-   ...: # Access the response content
-   ...: content = response.content
-   ...:
-   ...: # The Census data is now stored in the `content` variable and can be processed or saved elsewhere. The user can modify the `params` variable to request different data or specify a different API endpoint.
+```markdown
+"This is a SQL query that counts the number of downloads for the 'genai' project on the Python Package Index (PyPI) over the last 6 months, grouped by day. The query selects the count and the date, truncating the date to the day level so that it's easier to read.
 
-In [6]: content
-Out[6]: b'[["POP","state"],\n["4903185","01"],\n["731545","02"],\n["7278717","04"],\n["3017804","05"],\n["39512223","06"],\n["5758736","08"],\n["973764","10"],\n["705749","11"],\n["3565287","09"],\n["21477737","12"],\n["10617423","13"],\n["1787065","16"],\n["1415872","15"],\n["12671821","17"],\n["6732219","18"],\n["3155070","19"],\n["2913314","20"],\n["4467673","21"],\n["4648794","22"],\n["1344212","23"],\n["6045680","24"],\n["6892503","25"],\n["9986857","26"],\n["5639632","27"],\n["2976149","28"],\n["6137428","29"],\n["1068778","30"],\n["1934408","31"],\n["3080156","32"],\n["1359711","33"],\n["8882190","34"],\n["2096829","35"],\n["19453561","36"],\n["10488084","37"],\n["762062","38"],\n["11689100","39"],\n["3956971","40"],\n["4217737","41"],\n["12801989","42"],\n["1059361","44"],\n["5148714","45"],\n["884659","46"],\n["6829174","47"],\n["28995881","48"],\n["623989","50"],\n["3205958","49"],\n["8535519","51"],\n["7614893","53"],\n["1792147","54"],\n["5822434","55"],\n["578759","56"],\n["3193694","72"]]'
+Here is a breakdown of each part of the query:
+
+- `SELECT COUNT(*) AS num_downloads, DATE_TRUNC(DATE(timestamp), DAY) AS day`: This selects the count of the number of rows matched by the query as `num_downloads`, and the date truncated to the day level as `day`.
+- `FROM `bigquery-public-data.pypi.file_downloads``: This specifies the table to query from.
+- `WHERE file.project = 'genai'`: This filters the rows by only including downloads for the 'genai' project.
+- `AND DATE(timestamp) BETWEEN DATE_TRUNC(DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH), MONTH) AND CURRENT_DATE()`: This filters the rows by only including downloads from the last 6 months. The `DATE_SUB` function subtracts 6 months from the current date (`CURRENT_DATE()`), `DATE_TRUNC` truncates the result to be the start of the month and `DATE` converts the timestamp column to a date so the `BETWEEN` condition can filter rows between the start of 6 months ago and "today."
+- `GROUP BY day`: This groups the rows by day so that the counts are aggregated by date.
+- `ORDER BY day DESC`: This orders the rows so that the most recent date appears first in the result."
 ```
 
 <!-- --8<-- [end:start] -->
