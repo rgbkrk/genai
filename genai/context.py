@@ -41,14 +41,14 @@ def summarize_dataframe(df, sample_rows=5, sample_columns=20):
     Returns:
         A markdown string with a summary of the dataframe
     """
-    # get the number of rows and columns
     num_rows, num_cols = df.shape
 
-    # get the count and percentage of missing values in each column
+    # Column Summary
+    ## Missing value summary for all columns
     missing_values = pd.DataFrame(df.isnull().sum(), columns=['Missing Values'])
     missing_values['% Missing'] = missing_values['Missing Values'] / num_rows * 100
 
-    # combine column types and missing values information
+    ## Data type summary for all columns
     column_info = pd.concat([df.dtypes, missing_values], axis=1).reset_index()
     column_info.columns = ["Column Name", "Data Type", "Missing Values", "% Missing"]
     column_info['Data Type'] = column_info['Data Type'].astype(str)
@@ -89,22 +89,61 @@ def summarize_dataframe(df, sample_rows=5, sample_columns=20):
     return output
 
 
+def summarize_series(series, sample_size=5):
+    """
+    Create a summary of a Pandas Series for ChatGPT.
+
+    Parameters:
+        series (pd.Series): The series to be summarized.
+        sample_size (int): The number of values to sample
+
+    Returns:
+        A markdown string with a summary of the series
+    """
+    # Get basic series information
+    num_values = len(series)
+    data_type = series.dtype
+    num_missing = series.isnull().sum()
+    percent_missing = num_missing / num_values * 100
+
+    # Get summary statistics based on the data type
+    if np.issubdtype(data_type, np.number):
+        summary_statistics = series.describe().to_frame().T
+    elif pd.api.types.is_string_dtype(data_type):
+        summary_statistics = series.describe(datetime_is_numeric=True).to_frame().T
+    else:
+        summary_statistics = series.describe().to_frame().T
+
+    # Sample data
+    sampled = series.sample(min(sample_size, num_values))
+
+    tablefmt = "github"
+
+    # Create the markdown string for output
+    output = (
+        f"## Series Summary\n\n"
+        f"Number of Values: {num_values:,}\n\n"
+        f"Data Type: {data_type}\n\n"
+        f"Missing Values: {num_missing:,} ({percent_missing:.2f}%)\n\n"
+        f"### Summary Statistics\n\n{summary_statistics.to_markdown(tablefmt=tablefmt)}\n\n"
+        f"### Sample Data ({sample_size})\n\n{sampled.to_frame().to_markdown(tablefmt=tablefmt)}"
+    )
+
+    return output
+
+
 def repr_genai_pandas(output: Any) -> str:
     if not PANDAS_INSTALLED:
         return repr(output)
 
     if isinstance(output, pd.DataFrame):
-        # to_markdown() does not use the max_rows and max_columns options
-        # so we have to truncate the dataframe ourselves
         num_columns = min(pd.options.display.max_columns, output.shape[1])
         num_rows = min(pd.options.display.max_rows, output.shape[0])
         return summarize_dataframe(output, sample_rows=num_rows, sample_columns=num_columns)
 
     if isinstance(output, pd.Series):
-        # Similar truncation for series
         num_rows = min(pd.options.display.max_rows, output.shape[0])
-        sampled = output.sample(num_rows)
-        return sampled.to_markdown()
+        return summarize_series(output, sample_size=num_rows)
 
     return repr(output)
 
