@@ -102,3 +102,7 @@ exclude_lines = ["if self.debug:",
                  "if __name__ == '__main__':"]
 ignore_errors = true
 omit = ["genai/_version.py"]
+
+[tool.mypy]
+ignore_missing_imports = true
+warn_unused_configs = true
