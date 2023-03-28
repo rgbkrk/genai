@@ -106,3 +106,6 @@ omit = ["genai/_version.py"]
 [tool.mypy]
 ignore_missing_imports = true
 warn_unused_configs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
