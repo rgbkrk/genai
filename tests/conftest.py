@@ -1,3 +1,6 @@
+from unittest.mock import patch
+
+import pandas as pd
 import pytest
 from IPython.testing.globalipapp import start_ipython
 
@@ -17,3 +20,16 @@ def ip(session_ip):
 
     # Reset the history manager so that the next test starts with a clean slate
     session_ip.history_manager.reset()
+
+
+@pytest.fixture
+def patched_sample(request):
+    seed = request.param
+    original_sample = pd.DataFrame.sample
+
+    def sample_with_random_state(*args, **kwargs):
+        kwargs['random_state'] = seed
+        return original_sample(*args, **kwargs)
+
+    with patch('pandas.DataFrame.sample', new=sample_with_random_state):
+        yield

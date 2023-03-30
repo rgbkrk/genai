@@ -1,5 +1,4 @@
-from unittest import mock
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
@@ -128,7 +127,7 @@ def test_build_context_pandas_dataframe(ip):
         assert "|  1 |   4 |   2 |" in markdown_repr
 
 
-@mock.patch(
+@patch(
     "openai.ChatCompletion.create",
     return_value={
         "choices": [
@@ -207,21 +206,11 @@ def test_summarize_dataframe():
     assert "Sample Data" in summary
 
 
-def test_summarize_dataframe_no_missing():
-    original_sample = pd.DataFrame.sample
+@pytest.mark.parametrize("patched_sample", [1], indirect=True)
+def test_summarize_dataframe_no_missing(patched_sample):
+    df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
 
-    with patch('pandas.DataFrame.sample') as mock_sample:
-
-        def sample_with_random_state(*args, **kwargs):
-            kwargs['random_state'] = 1
-
-            return original_sample(df, *args, **kwargs)
-
-        mock_sample.side_effect = sample_with_random_state
-
-        df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
-
-        expected_output = """
+    expected_output = """
 ## Dataframe Summary
 
 Number of Rows: 3
@@ -257,9 +246,9 @@ Number of Columns: 2
 
 """.strip()
 
-        actual = summarize_dataframe(df)
+    actual = summarize_dataframe(df)
 
-        assert actual == expected_output
+    assert actual == expected_output
 
 
 @pytest.mark.skip(reason="after the other two sampling involved tests are ready")
