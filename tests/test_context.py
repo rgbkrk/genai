@@ -275,12 +275,8 @@ Number of Columns: 2
 
 @pytest.mark.parametrize("patched_series_sample", [1], indirect=True)
 def test_repr_genai_pandas_series(patched_series_sample, ip):
-    # create a mock Series
     series = pd.Series([1, 2, 3])
-    # call the function with the mock DataFrame
     result = repr_genai_pandas(series)
-
-    print(result)
 
     expected = """
 ## Series Summary
@@ -304,6 +300,50 @@ Missing Values: 0 (0.00%)
 |  0 |   1 |
 |  2 |   3 |
 |  1 |   2 |
+""".strip()
+
+    assert result == expected
+
+
+@pytest.mark.parametrize("patched_series_sample", [1], indirect=True)
+def test_repr_genai_pandas_series_pirate(patched_series_sample, ip):
+    series = pd.Series(
+        {
+            'Name': 'Blackbeard',
+            'Age': 40,
+            'Ship': 'Queen Anne\'s Revenge',
+            'Crew Size': 300,
+            'Treasure': '$12.5 million',
+        }
+    )
+    result = repr_genai_pandas(series)
+
+    print(result)
+
+    expected = """
+## Series Summary
+
+Number of Values: 5
+
+Data Type: object
+
+Missing Values: 0 (0.00%)
+
+### Summary Statistics
+
+|    |   count |   unique | top        |   freq |
+|----|---------|----------|------------|--------|
+|  0 |       5 |        5 | Blackbeard |      1 |
+
+### Sample Data (5)
+
+|           | 0                    |
+|-----------|----------------------|
+| Ship      | Queen Anne's Revenge |
+| Age       | 40                   |
+| Treasure  | $12.5 million        |
+| Name      | Blackbeard           |
+| Crew Size | 300                  |
 """.strip()
 
     assert result == expected
