@@ -4,11 +4,11 @@ import pandas as pd
 import pytest
 
 from genai.context import (
+    PastAssists,
+    PastErrors,
     build_context,
     repr_genai,
     repr_genai_pandas,
-    PastAssists,
-    PastErrors,
     summarize_dataframe,
 )
 from genai.display import GenaiMarkdown
@@ -259,7 +259,7 @@ def test_repr_genai_pandas_series(sample, ip):
     # call the function with the mock DataFrame
     result = repr_genai_pandas(series)
 
-    # check that the MagicMock was called with the correct arguments
+    # check that the mock was called with the correct arguments
     sample.assert_called_with(3)
 
     # check that the result of the function is the same as the expected result

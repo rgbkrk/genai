@@ -3,8 +3,8 @@ from unittest import mock
 
 from genai import suggestions
 from genai.context import PastErrors
-from genai.suggestions import can_handle_display_updates
 from genai.prompts import PromptStore
+from genai.suggestions import can_handle_display_updates
 
 
 def test_register():
