@@ -23,7 +23,7 @@ def ip(session_ip):
 
 
 @pytest.fixture
-def patched_sample(request):
+def patched_dataframe_sample(request):
     seed = request.param
     original_sample = pd.DataFrame.sample
 
@@ -32,4 +32,17 @@ def patched_sample(request):
         return original_sample(*args, **kwargs)
 
     with patch('pandas.DataFrame.sample', new=sample_with_random_state):
+        yield
+
+
+@pytest.fixture
+def patched_series_sample(request):
+    seed = request.param
+    original_sample = pd.Series.sample
+
+    def sample_with_random_state(*args, **kwargs):
+        kwargs['random_state'] = seed
+        return original_sample(*args, **kwargs)
+
+    with patch('pandas.Series.sample', new=sample_with_random_state):
         yield

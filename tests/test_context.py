@@ -93,8 +93,8 @@ def test_build_context_no_output(ip):
     assert context.messages[0] == {"content": "a = 1", "role": "user"}
 
 
-@pytest.mark.parametrize("patched_sample", [1], indirect=True)
-def test_build_context_pandas_dataframe(ip, patched_sample):
+@pytest.mark.parametrize("patched_dataframe_sample", [1], indirect=True)
+def test_build_context_pandas_dataframe(ip, patched_dataframe_sample):
     # Test build_context with pandas DataFrame
     ip.run_cell("import pandas as pd", store_history=True)
     ip.run_cell("df = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})", store_history=True)
@@ -228,8 +228,8 @@ def test_summarize_dataframe():
     assert "Sample Data" in summary
 
 
-@pytest.mark.parametrize("patched_sample", [1], indirect=True)
-def test_summarize_dataframe_no_missing(patched_sample):
+@pytest.mark.parametrize("patched_dataframe_sample", [1], indirect=True)
+def test_summarize_dataframe_no_missing(patched_dataframe_sample):
     df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
 
     expected_output = """
@@ -273,21 +273,39 @@ Number of Columns: 2
     assert actual == expected_output
 
 
-@pytest.mark.skip(reason="after the other two sampling involved tests are ready")
-@patch("pandas.Series.sample", return_value=pd.Series([1, 2, 3]))
-def test_repr_genai_pandas_series(sample, ip):
+@pytest.mark.parametrize("patched_series_sample", [1], indirect=True)
+def test_repr_genai_pandas_series(patched_series_sample, ip):
     # create a mock Series
     series = pd.Series([1, 2, 3])
     # call the function with the mock DataFrame
     result = repr_genai_pandas(series)
 
-    # check that the mock was called with the correct arguments
-    sample.assert_called_with(3)
+    print(result)
 
-    # check that the result of the function is the same as the expected result
-    expected = series.sample(
-        min(pd.options.display.max_rows, series.shape[0]), axis=0
-    ).to_markdown()
+    expected = """
+## Series Summary
+
+Number of Values: 3
+
+Data Type: int64
+
+Missing Values: 0 (0.00%)
+
+### Summary Statistics
+
+|    |   count |   mean |   std |   min |   25% |   50% |   75% |   max |
+|----|---------|--------|-------|-------|-------|-------|-------|-------|
+|  0 |       3 |      2 |     1 |     1 |   1.5 |     2 |   2.5 |     3 |
+
+### Sample Data (3)
+
+|    |   0 |
+|----|-----|
+|  0 |   1 |
+|  2 |   3 |
+|  1 |   2 |
+""".strip()
+
     assert result == expected
 
 
