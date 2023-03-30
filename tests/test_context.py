@@ -93,8 +93,8 @@ def test_build_context_no_output(ip):
     assert context.messages[0] == {"content": "a = 1", "role": "user"}
 
 
-@pytest.mark.skip(reason="need to figure out sampling first")
-def test_build_context_pandas_dataframe(ip):
+@pytest.mark.parametrize("patched_sample", [1], indirect=True)
+def test_build_context_pandas_dataframe(ip, patched_sample):
     # Test build_context with pandas DataFrame
     ip.run_cell("import pandas as pd", store_history=True)
     ip.run_cell("df = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})", store_history=True)
@@ -112,19 +112,41 @@ def test_build_context_pandas_dataframe(ip):
     markdown_repr = context.messages[3]["content"]
     assert context.messages[3]["role"] == "system"
 
-    # We're sampling a two by two so we can just check the permutations
+    expected = """
+## Dataframe Summary
 
-    if "|    |   A |   B |" in markdown_repr:
-        assert "|    |   A |   B |" in markdown_repr
-        assert "|---:|----:|----:|" in markdown_repr
-        # The rows may be in another order so we just check containment
-        assert "|  0 |   1 |   3 |" in markdown_repr
-        assert "|  1 |   2 |   4 |" in markdown_repr
-    else:
-        assert "|    |   B |   A |" in markdown_repr
-        assert "|---:|----:|----:|" in markdown_repr
-        assert "|  0 |   3 |   1 |" in markdown_repr
-        assert "|  1 |   4 |   2 |" in markdown_repr
+Number of Rows: 2
+
+Number of Columns: 2
+
+### Column Information
+
+|    | Column Name   | Data Type   |   Missing Values |   % Missing |
+|----|---------------|-------------|------------------|-------------|
+|  0 | A             | int64       |                0 |           0 |
+|  1 | B             | int64       |                0 |           0 |
+
+### Numerical Summary
+
+|    | Column Name   |   count |   mean |      std |   min |   25% |   50% |   75% |   max |
+|----|---------------|---------|--------|----------|-------|-------|-------|-------|-------|
+|  0 | A             |       2 |    1.5 | 0.707107 |     1 |  1.25 |   1.5 |  1.75 |     2 |
+|  1 | B             |       2 |    3.5 | 0.707107 |     3 |  3.25 |   3.5 |  3.75 |     4 |
+
+### Categorical Summary
+
+| Column Name   |
+|---------------|
+
+### Sample Data (2x2)
+
+|    |   A |   B |
+|----|-----|-----|
+|  0 |   1 |   3 |
+|  1 |   2 |   4 |
+
+""".strip()
+    assert markdown_repr == expected
 
 
 @patch(
