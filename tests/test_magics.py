@@ -1,7 +1,7 @@
 from unittest import mock
 
-from genai.prompts import PromptStore
 from genai.context import PastAssists
+from genai.prompts import PromptStore
 
 
 @mock.patch(

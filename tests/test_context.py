@@ -1,9 +1,16 @@
-from unittest import mock
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import patch
 
 import pandas as pd
+import pytest
 
-from genai.context import build_context, repr_genai, repr_genai_pandas, PastAssists, PastErrors
+from genai.context import (
+    PastAssists,
+    PastErrors,
+    build_context,
+    repr_genai,
+    repr_genai_pandas,
+    summarize_dataframe,
+)
 from genai.display import GenaiMarkdown
 
 
@@ -86,7 +93,8 @@ def test_build_context_no_output(ip):
     assert context.messages[0] == {"content": "a = 1", "role": "user"}
 
 
-def test_build_context_pandas_dataframe(ip):
+@pytest.mark.parametrize("patched_dataframe_sample", [1], indirect=True)
+def test_build_context_pandas_dataframe(ip, patched_dataframe_sample):
     # Test build_context with pandas DataFrame
     ip.run_cell("import pandas as pd", store_history=True)
     ip.run_cell("df = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})", store_history=True)
@@ -104,22 +112,44 @@ def test_build_context_pandas_dataframe(ip):
     markdown_repr = context.messages[3]["content"]
     assert context.messages[3]["role"] == "system"
 
-    # We're sampling a two by two so we can just check the permutations
+    expected = """
+## Dataframe Summary
 
-    if "|    |   A |   B |" in markdown_repr:
-        assert "|    |   A |   B |" in markdown_repr
-        assert "|---:|----:|----:|" in markdown_repr
-        # The rows may be in another order so we just check containment
-        assert "|  0 |   1 |   3 |" in markdown_repr
-        assert "|  1 |   2 |   4 |" in markdown_repr
-    else:
-        assert "|    |   B |   A |" in markdown_repr
-        assert "|---:|----:|----:|" in markdown_repr
-        assert "|  0 |   3 |   1 |" in markdown_repr
-        assert "|  1 |   4 |   2 |" in markdown_repr
+Number of Rows: 2
+
+Number of Columns: 2
+
+### Column Information
+
+|    | Column Name   | Data Type   |   Missing Values |   % Missing |
+|----|---------------|-------------|------------------|-------------|
+|  0 | A             | int64       |                0 |           0 |
+|  1 | B             | int64       |                0 |           0 |
+
+### Numerical Summary
+
+|    | Column Name   |   count |   mean |      std |   min |   25% |   50% |   75% |   max |
+|----|---------------|---------|--------|----------|-------|-------|-------|-------|-------|
+|  0 | A             |       2 |    1.5 | 0.707107 |     1 |  1.25 |   1.5 |  1.75 |     2 |
+|  1 | B             |       2 |    3.5 | 0.707107 |     3 |  3.25 |   3.5 |  3.75 |     4 |
+
+### Categorical Summary
+
+| Column Name   |
+|---------------|
+
+### Sample Data (2x2)
+
+|    |   A |   B |
+|----|-----|-----|
+|  0 |   1 |   3 |
+|  1 |   2 |   4 |
+
+""".strip()
+    assert markdown_repr == expected
 
 
-@mock.patch(
+@patch(
     "openai.ChatCompletion.create",
     return_value={
         "choices": [
@@ -183,39 +213,139 @@ Make the most dope plot ever
     }
 
 
-def test_repr_genai_pandas():
+def test_summarize_dataframe():
     # create a mock DataFrame
     df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
-    # create a MagicMock for the sample method
-    mock_sample = MagicMock(return_value=df)
-    # assign the MagicMock to the sample attribute of the DataFrame
-    df.sample = mock_sample
 
-    # call the function with the mock DataFrame
-    result = repr_genai_pandas(df)
+    # call the summarize_dataframe function with the mock DataFrame
+    summary = summarize_dataframe(df)
 
-    # check that the MagicMock was called with the correct arguments
-    mock_sample.assert_called_with(min(pd.options.display.max_rows, df.shape[0]), axis=0)
+    # Check if the summary contains essential information
+    assert "Number of Rows" in summary
+    assert "Number of Columns" in summary
+    assert "Column Information" in summary
+    assert "Numerical Summary" in summary
+    assert "Sample Data" in summary
 
-    # check that the result of the function is the same as the expected result
-    expected = df.sample(min(pd.options.display.max_rows, df.shape[0]), axis=0).to_markdown()
+
+@pytest.mark.parametrize("patched_dataframe_sample", [1], indirect=True)
+def test_summarize_dataframe_no_missing(patched_dataframe_sample):
+    df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
+
+    expected_output = """
+## Dataframe Summary
+
+Number of Rows: 3
+
+Number of Columns: 2
+
+### Column Information
+
+|    | Column Name   | Data Type   |   Missing Values |   % Missing |
+|----|---------------|-------------|------------------|-------------|
+|  0 | A             | int64       |                0 |           0 |
+|  1 | B             | int64       |                0 |           0 |
+
+### Numerical Summary
+
+|    | Column Name   |   count |   mean |   std |   min |   25% |   50% |   75% |   max |
+|----|---------------|---------|--------|-------|-------|-------|-------|-------|-------|
+|  0 | A             |       3 |      2 |     1 |     1 |   1.5 |     2 |   2.5 |     3 |
+|  1 | B             |       3 |      5 |     1 |     4 |   4.5 |     5 |   5.5 |     6 |
+
+### Categorical Summary
+
+| Column Name   |
+|---------------|
+
+### Sample Data (3x2)
+
+|    |   A |   B |
+|----|-----|-----|
+|  0 |   1 |   4 |
+|  2 |   3 |   6 |
+|  1 |   2 |   5 |
+
+""".strip()
+
+    actual = summarize_dataframe(df)
+
+    assert actual == expected_output
+
+
+@pytest.mark.parametrize("patched_series_sample", [1], indirect=True)
+def test_repr_genai_pandas_series(patched_series_sample, ip):
+    series = pd.Series([1, 2, 3])
+    result = repr_genai_pandas(series)
+
+    expected = """
+## Series Summary
+
+Number of Values: 3
+
+Data Type: int64
+
+Missing Values: 0 (0.00%)
+
+### Summary Statistics
+
+|    |   count |   mean |   std |   min |   25% |   50% |   75% |   max |
+|----|---------|--------|-------|-------|-------|-------|-------|-------|
+|  0 |       3 |      2 |     1 |     1 |   1.5 |     2 |   2.5 |     3 |
+
+### Sample Data (3)
+
+|    |   0 |
+|----|-----|
+|  0 |   1 |
+|  2 |   3 |
+|  1 |   2 |
+""".strip()
+
     assert result == expected
 
 
-@patch("pandas.Series.sample", return_value=pd.Series([1, 2, 3]))
-def test_repr_genai_pandas_series(sample, ip):
-    # create a mock Series
-    series = pd.Series([1, 2, 3])
-    # call the function with the mock DataFrame
+@pytest.mark.parametrize("patched_series_sample", [1], indirect=True)
+def test_repr_genai_pandas_series_pirate(patched_series_sample, ip):
+    series = pd.Series(
+        {
+            'Name': 'Blackbeard',
+            'Age': 40,
+            'Ship': 'Queen Anne\'s Revenge',
+            'Crew Size': 300,
+            'Treasure': '$12.5 million',
+        }
+    )
     result = repr_genai_pandas(series)
 
-    # check that the MagicMock was called with the correct arguments
-    sample.assert_called_with(3)
+    print(result)
 
-    # check that the result of the function is the same as the expected result
-    expected = series.sample(
-        min(pd.options.display.max_rows, series.shape[0]), axis=0
-    ).to_markdown()
+    expected = """
+## Series Summary
+
+Number of Values: 5
+
+Data Type: object
+
+Missing Values: 0 (0.00%)
+
+### Summary Statistics
+
+|    |   count |   unique | top        |   freq |
+|----|---------|----------|------------|--------|
+|  0 |       5 |        5 | Blackbeard |      1 |
+
+### Sample Data (5)
+
+|           | 0                    |
+|-----------|----------------------|
+| Ship      | Queen Anne's Revenge |
+| Age       | 40                   |
+| Treasure  | $12.5 million        |
+| Name      | Blackbeard           |
+| Crew Size | 300                  |
+""".strip()
+
     assert result == expected
 
 
