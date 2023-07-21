@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+## `2.1.0`
+
+#### Removed
+
+- Remove unused dependency on `vdom`
+
+#### Changed
+
+- Improved DataFrame summarization
+
 ## `2.0.0`
 
 ### Enhancements:
@@ -19,12 +29,12 @@
 #### Changed
 
 - 🧪 Craft a more ipythonic context manager (#62, #66)
+
   - Meet the new `Context` class: capture IPython history and make it ChatCompletion-friendly
   - Farewell `get_historical_context`, hello `build_context`: context construction using the new Context class
   - Reduce messages sent to GPT models by trimming based on estimated number of tokens (#57)
 
 - 🎯 Type annotations step in! (#59)
-
 
 #### Improved
 
@@ -38,7 +48,6 @@
 
 - 🚫 `%%assist` no longer generates new code cells. It now creates Markdown output instead (#66)
   - Relatedly, `in-place` is no longer an option since we do not change the cells
-
 
 ### Changes:
 
