@@ -3,6 +3,7 @@ from typing import Any, Dict, Iterator, List, TypedDict
 import openai
 
 from genai.prompts import PromptStore
+import litellm
 
 Completion = TypedDict(
     "Completion",
@@ -51,7 +52,7 @@ def generate_next_from_history(
     text: str,
     stream: bool = False,
 ) -> Iterator[str]:
-    response = openai.ChatCompletion.create(
+    response = litellm.completion(
         model="gpt-3.5-turbo",
         messages=[
             # Establish the context of the conversation
@@ -111,7 +112,7 @@ def generate_exception_suggestion(
         },
     )
 
-    response = openai.ChatCompletion.create(
+    response = litellm.completion(
         model="gpt-3.5-turbo",
         messages=messages,
         stream=stream,
